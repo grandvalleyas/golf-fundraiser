@@ -12,6 +12,7 @@ import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { useToast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
+import Link from "next/dist/client/link";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type SpotDetails = {
@@ -114,7 +115,7 @@ export default function Register() {
       fetchPurchasedSpots();
       initialPurchasedSpotsRef.current = [...purchasedSpots];
     }
-  }, [user, fetchPurchasedSpots, purchasedSpots]); // Removed purchasedSpots from dependencies
+  }, [user, fetchPurchasedSpots]); // Removed purchasedSpots from dependencies
 
   useEffect(() => {
     if (searchParams.get("success") === "true" && user) {
@@ -131,7 +132,7 @@ export default function Register() {
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [searchParams, fetchPurchasedSpots, user, loading, purchasedSpots]);
+  }, [searchParams, fetchPurchasedSpots, user]); // Removed purchasedSpots from dependencies
 
   const handleSpotChange = (index: number, field: keyof SpotDetails, value: string) => {
     const newSpotDetails = [...spotDetails];
@@ -352,7 +353,9 @@ export default function Register() {
         </div>
       </section>
 
-      <SignedOut>{loading ? <div>Loading...</div> : <RedirectToSignIn />}</SignedOut>
+      <SignedOut>
+        <RedirectToSignIn />
+      </SignedOut>
       <SignedIn>
         <div className="container mx-auto px-4 py-4 sm:py-8">
           {loading && <p className="text-muted-foreground text-sm sm:text-base">Loading purchased spots...</p>}
