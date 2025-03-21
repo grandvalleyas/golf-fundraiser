@@ -48,21 +48,66 @@ export default function Register() {
   const fetchPurchasedSpots = useCallback(
     async (isPolling = false) => {
       if (!user?.id) return;
-      const response = await fetch("/api/teams/user-spots", {
-        method: "POST",
-        body: JSON.stringify({ userId: user.id }),
-        headers: { "Content-Type": "application/json" },
-      });
-      const data = await response.json();
-      console.log(`Fetched purchased spots for user ${user.id}:`, data.spots);
-      const newPurchasedSpots = data.spots || [];
-      setPurchasedSpots(newPurchasedSpots);
-      setTotalSpots(newPurchasedSpots.reduce((sum: number) => sum + 1, 0));
-      if (isPolling && newPurchasedSpots.length > 0) {
+      setLoading(true);
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout
+
+        const response = await fetch("/api/teams/user-spots", {
+          method: "POST",
+          body: JSON.stringify({ userId: user.id }),
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const text = await response.text();
+          try {
+            const error = JSON.parse(text);
+            throw new Error(error.error || "Failed to fetch spots");
+          } catch {
+            throw new Error("Failed to fetch spots: Invalid response format");
+          }
+        }
+
+        // Check if the response body is empty
+        const text = await response.text();
+        if (!text) {
+          // Handle empty response by returning an empty array of spots
+          console.log(`No spots found for user ${user.id}`);
+          setPurchasedSpots([]);
+          setTotalSpots(0);
+          if (isPolling) {
+            setLoading(false);
+          }
+          return;
+        }
+
+        // Parse the response as JSON
+        const data = JSON.parse(text);
+        console.log(`Fetched purchased spots for user ${user.id}:`, data.spots);
+        const newPurchasedSpots = data.spots || [];
+        setPurchasedSpots(newPurchasedSpots);
+        setTotalSpots(newPurchasedSpots.reduce((sum: number) => sum + 1, 0));
+        if (isPolling) {
+          setLoading(false); // Stop polling after a successful fetch
+        }
+      } catch (err: unknown) {
+        const error = err as Error;
+        console.error("Error fetching purchased spots:", error);
+        toast({
+          title: "Error",
+          description: error.message || "Failed to fetch purchased spots",
+          variant: "destructive",
+        });
+        setPurchasedSpots([]); // Default to empty array on error
+        setTotalSpots(0);
+      } finally {
         setLoading(false);
       }
     },
-    [user?.id]
+    [user?.id, toast]
   );
 
   useEffect(() => {
@@ -70,24 +115,33 @@ export default function Register() {
       fetchPurchasedSpots();
       initialPurchasedSpotsRef.current = [...purchasedSpots];
     }
-  }, [user, fetchPurchasedSpots, purchasedSpots]);
+  }, [user, fetchPurchasedSpots]); // Removed purchasedSpots from dependencies
 
   useEffect(() => {
     if (searchParams.get("success") === "true" && user) {
       setLoading(true);
       initialPurchasedSpotsRef.current = [...purchasedSpots];
+      let attempts = 0;
+      const maxAttempts = 10; // Stop polling after 10 attempts if no spots are found
       const interval = setInterval(() => {
         fetchPurchasedSpots(true);
+        attempts++;
+        if (!loading || attempts >= maxAttempts) {
+          clearInterval(interval);
+        }
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [searchParams, fetchPurchasedSpots, user, purchasedSpots]);
+  }, [searchParams, fetchPurchasedSpots, user]); // Removed purchasedSpots from dependencies
 
   const handleSpotChange = (index: number, field: keyof SpotDetails, value: string) => {
     const newSpotDetails = [...spotDetails];
     newSpotDetails[index] = { ...newSpotDetails[index], [field]: value };
     setSpotDetails(newSpotDetails);
-    validateForm(index, value, field);
+    // Only validate if the value has changed
+    if (newSpotDetails[index][field] !== spotDetails[index][field]) {
+      validateForm(index, value, field);
+    }
   };
 
   const handleSpotsChange = (value: string) => {
@@ -172,27 +226,45 @@ export default function Register() {
       });
       return;
     }
-    const response = await fetch("/api/checkout", {
-      method: "POST",
-      body: JSON.stringify({
-        spots,
-        donation,
-        userId: user?.id,
-        spotDetails,
-      }),
-      headers: { "Content-Type": "application/json" },
-    });
-    if (!response.ok) {
-      const error = await response.json();
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout
+
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        body: JSON.stringify({
+          spots,
+          donation,
+          userId: user?.id,
+          spotDetails,
+        }),
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const text = await response.text();
+        try {
+          const error = JSON.parse(text);
+          throw new Error(error.error || "Failed to initiate payment");
+        } catch {
+          throw new Error("Failed to initiate payment: Invalid response format");
+        }
+      }
+
+      const { url } = await response.json();
+      window.location.href = url;
+    } catch (err: unknown) {
+      const error = err as Error;
+      console.error("Error during checkout:", error);
       toast({
         title: "Payment Error",
-        description: error.error || "Failed to initiate payment",
+        description: error.message || "Failed to initiate payment",
         variant: "destructive",
       });
-      return;
     }
-    const { url } = await response.json();
-    window.location.href = url;
   };
 
   const handleEditSpotChange = (field: keyof SpotDetails, value: string) => {
@@ -218,27 +290,44 @@ export default function Register() {
       return;
     }
 
-    const response = await fetch("/api/teams/edit-spot", {
-      method: "PUT",
-      body: JSON.stringify({
-        userId: user?.id,
-        spotId: editedSpot.spotId,
-        updatedDetails: editedSpot,
-      }),
-      headers: { "Content-Type": "application/json" },
-    });
-    if (response.ok) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout
+
+      const response = await fetch("/api/teams/edit-spot", {
+        method: "PUT",
+        body: JSON.stringify({
+          userId: user?.id,
+          spotId: editedSpot.spotId,
+          updatedDetails: editedSpot,
+        }),
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const text = await response.text();
+        try {
+          const error = JSON.parse(text);
+          throw new Error(error.error || "Failed to update spot");
+        } catch {
+          throw new Error("Failed to update spot: Invalid response format");
+        }
+      }
+
       fetchPurchasedSpots();
       setEditedSpot(null);
       toast({
         title: "Success",
         description: "Spot updated successfully!",
       });
-    } else {
-      const error = await response.json();
+    } catch (err: unknown) {
+      const error = err as Error;
+      console.error("Error updating spot:", error);
       toast({
         title: "Error",
-        description: error.error || "Failed to update spot",
+        description: error.message || "Failed to update spot",
         variant: "destructive",
       });
     }
@@ -518,7 +607,7 @@ export default function Register() {
                                         />
                                       </div>
                                       <div>
-                                        <Label htmlFor="edit-email" className="text-sm sm:text-base">
+                                        <Label htmlFor="edit-email" className="text.sm sm:text-base">
                                           Email
                                         </Label>
                                         <Input

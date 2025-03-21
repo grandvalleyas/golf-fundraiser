@@ -90,11 +90,6 @@ export default function Sponsor() {
           // Assert that err is an Error
           const error = err as Error;
           console.error("Error creating sponsor after payment:", error);
-          toast({
-            title: "Error",
-            description: error.message || "Failed to create sponsor after payment",
-            variant: "destructive",
-          });
         }
       };
       createSponsorAfterPayment();
