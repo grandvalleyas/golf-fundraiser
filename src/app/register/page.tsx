@@ -12,7 +12,6 @@ import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { useToast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
-import Link from "next/dist/client/link";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type SpotDetails = {
@@ -115,7 +114,7 @@ export default function Register() {
       fetchPurchasedSpots();
       initialPurchasedSpotsRef.current = [...purchasedSpots];
     }
-  }, [user, fetchPurchasedSpots]); // Removed purchasedSpots from dependencies
+  }, [user, fetchPurchasedSpots, purchasedSpots]); // Removed purchasedSpots from dependencies
 
   useEffect(() => {
     if (searchParams.get("success") === "true" && user) {
@@ -132,7 +131,7 @@ export default function Register() {
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [searchParams, fetchPurchasedSpots, user]); // Removed purchasedSpots from dependencies
+  }, [searchParams, fetchPurchasedSpots, user, loading, purchasedSpots]);
 
   const handleSpotChange = (index: number, field: keyof SpotDetails, value: string) => {
     const newSpotDetails = [...spotDetails];
