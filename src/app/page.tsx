@@ -70,25 +70,26 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <Alert className="mb-4 bg-secondary">
             <CircleAlert className="h-4 w-4" />
-            <AlertTitle className="font">READ ME: Geting Started</AlertTitle>
+            <AlertTitle className="font">READ ME: Getting Started</AlertTitle>
             <AlertDescription className="pt-2">
-              Here’s what you need to know:
+              Here&apos;s what you need to know:
               <ul className="list-disc pl-5 pt-2 space-y-2">
                 {" "}
                 <li>
                   <span className="font-bold">If you know your four golfing partners:</span> You can create a <span className="italic">private team</span> just for your group. When setting up a
                   private team, you can <span className="italic">whitelist</span> your team by adding the names or emails of your friends, so only they can join. <br /> &nbsp;&nbsp;&nbsp;&nbsp;
-                  <span className="font-bold">Important:</span> You should only make a team private if you’re reserving all four spots.{" "}
+                  <span className="font-bold">Important:</span> You should only make a team private if you&apos;re reserving all four spots.{" "}
                 </li>{" "}
                 <li>
-                  <span className="font-bold">If you’re signing up with fewer than four people (like a duo or trio):</span> You can either create a <span className="italic">public team</span> that
-                  others can join, or join an existing public team to fill out the group. This way, everyone gets to enjoy the day on the course!{" "}
+                  <span className="font-bold">If you&apos;re signing up with fewer than four people (like a duo or trio):</span> You can either create a <span className="italic">public team</span>{" "}
+                  that others can join, or join an existing public team to fill out the group. This way, everyone gets to enjoy the day on the course!{" "}
                 </li>{" "}
                 <li>
-                  <span className="font-bold">Need help?</span> If you run into any trouble or have questions, don’t hesitate to give Vinny a call at 630-967-4286—he’s happy to help you get set up.{" "}
+                  <span className="font-bold">Need help?</span> If you run into any trouble or have questions, don&apos;t hesitate to give Vinny a call/text at 630-967-4286 — he&apos;s happy to help
+                  you get set up.{" "}
                 </li>{" "}
               </ul>{" "}
-              <br /> Let’s get ready for a great golf outing!
+              <br /> Let&apos;s get ready for a great golf outing!
             </AlertDescription>
           </Alert>
           <Card>
@@ -214,7 +215,7 @@ export default function Home() {
                     needed.
                   </AccordionContent>
                 </AccordionItem>
-                <AccordionItem value="item-4">
+                <AccordionItem value="item-5">
                   <AccordionTrigger className="text-sm sm:text-base">Need additional help or support?</AccordionTrigger>
                   <AccordionContent className="text-sm sm:text-base">
                     For all event related inquireies, contact{" "}
