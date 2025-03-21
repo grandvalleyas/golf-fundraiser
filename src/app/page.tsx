@@ -120,8 +120,7 @@ export default function Home() {
               <div className="space-y-2">
                 <h3 className="text-lg sm:text-xl font-semibold">Description</h3>
                 <p className="text-sm sm:text-base">
-                  Join football alumni and friends at the 44th Annual Football Alumni Golf Outing for a day on the green followed by a meal, drinks, and post-golf awards. The best dressed team at the
-                  outing will win a complimentary foursome in the 2025 outing!
+                  Join football alumni and friends at the 44th Annual Football Alumni Golf Outing for a day on the green followed by a meal, drinks, and post-golf awards.
                 </p>
               </div>
 
