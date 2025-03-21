@@ -45,7 +45,7 @@ export default function Home() {
               <SignUpButton mode="modal" redirectUrl="/register">
                 <Button className="text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3 bg-primary hover:bg-accent">Sign Up</Button>
               </SignUpButton>
-              <SignInButton mode="modal">
+              <SignInButton mode="modal" redirectUrl="/register">
                 <Button variant="outline" className="text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3">
                   Sign In
                 </Button>
@@ -130,7 +130,7 @@ export default function Home() {
                     <SignUpButton mode="modal" redirectUrl="/register">
                       <Button className="text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3 bg-primary hover:bg-accent">Sign Up</Button>
                     </SignUpButton>
-                    <SignInButton mode="modal">
+                    <SignInButton mode="modal" redirectUrl="/register">
                       <Button variant="outline" className="text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3">
                         Sign In
                       </Button>
