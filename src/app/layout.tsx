@@ -1,14 +1,11 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
-import { Inter } from "next/font/google";
 import Navbar from "@/app/Navbar";
 import { Toaster } from "@/components/ui/toaster";
 
-const inter = Inter({ subsets: ["latin"] });
-
 export const metadata = {
-  title: "Golf Outing App",
-  description: "Manage your golf teams and spots",
+  title: "44th Annual GVAS Golf Outing",
+  description: "Sign up today for the 44th annual GVAS Golf Outing.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
