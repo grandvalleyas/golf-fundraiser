@@ -31,7 +31,7 @@ export async function POST(request: Request) {
         })) || []
     );
 
-    console.log(`Fetched spots for user ${userId}:`, spots);
+    console.log(`Fetched spot for user ${userId}:`, spots);
     return NextResponse.json({ spots });
   } catch (err) {
     console.error(`Error in POST /api/teams/user-spots: ${err}`);
