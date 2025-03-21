@@ -45,10 +45,10 @@ export default function Home() {
           </p>
           <SignedOut>
             <div className="space-x-2 sm:space-x-4">
-              <SignUpButton mode={isMobile ? "redirect" : "modal"} redirectUrl="/register">
+              <SignUpButton mode={isMobile ? "redirect" : "modal"}>
                 <Button className="text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3 bg-primary hover:bg-accent">Sign Up</Button>
               </SignUpButton>
-              <SignInButton mode={isMobile ? "redirect" : "modal"} redirectUrl="/register">
+              <SignInButton mode={isMobile ? "redirect" : "modal"}>
                 <Button variant="outline" className="text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3">
                   Sign In
                 </Button>
@@ -130,10 +130,10 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center">
                 <SignedOut>
                   <div className="space-x-2 sm:space-x-4">
-                    <SignUpButton mode={isMobile ? "redirect" : "modal"} redirectUrl="/register">
+                    <SignUpButton mode={isMobile ? "redirect" : "modal"}>
                       <Button className="text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3 bg-primary hover:bg-accent">Sign Up</Button>
                     </SignUpButton>
-                    <SignInButton mode={isMobile ? "redirect" : "modal"} redirectUrl="/register">
+                    <SignInButton mode={isMobile ? "redirect" : "modal"}>
                       <Button variant="outline" className="text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3">
                         Sign In
                       </Button>
