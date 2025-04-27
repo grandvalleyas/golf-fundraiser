@@ -10,6 +10,7 @@ import Image from "next/image";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CircleAlert } from "lucide-react";
 
+
 export default function Home() {
   const images = [
     {
