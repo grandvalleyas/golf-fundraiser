@@ -58,7 +58,7 @@ export async function POST(request: Request) {
       } catch {
         console.warn("freeGolfers not JSON");
       }
-      const price = parseFloat(meta.price || "0");
+      const sponsorPrice = parseFloat(meta.sponsorPrice || "0");
       const isUpgrade = meta.isUpgrade === "true";
 
       if (!name || !tier) {
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
         const updateData: { [key: string]: any } = {
           name,
           tier,
-          price,
+          price: sponsorPrice,
           updatedAt: new Date(),
           freeGolfers,
         };
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
           userId,
           name,
           tier,
-          price,
+          price: sponsorPrice,
           createdAt: new Date(),
           freeGolfers,
         };

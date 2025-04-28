@@ -3,7 +3,7 @@ import { stripe } from "@/lib/stripe";
 import { connectToDatabase } from "@/lib/mongodb";
 
 export async function POST(request: Request) {
-  const { price, userId, name, tier, logo, text, websiteLink, freeGolfers, isUpgrade } = await request.json();
+  const { price, userId, name, tier, logo, text, websiteLink, freeGolfers, sponsorPrice, isUpgrade } = await request.json();
   const origin = request.headers.get("origin") || "http://localhost:3000";
   const { db } = await connectToDatabase();
 
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
         text: text || "",
         websiteLink: websiteLink || "",
         freeGolfers: JSON.stringify(freeGolfers || []),
-        price: price.toString(),
+        sponsorPrice: sponsorPrice.toString(),
         isUpgrade: isUpgrade ? "true" : "false",
       },
     });
