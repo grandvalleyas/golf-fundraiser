@@ -114,7 +114,7 @@ export default function Sponsor() {
           const response = await fetch(`/api/sponsor/retrieve-session?sessionId=${sessionId}`);
           if (!response.ok) throw new Error("Failed to retrieve session");
           const session = await response.json();
-          const { userId, name, tier, logo, text, websiteLink, freeGolfers, price, isUpgrade } = session.metadata;
+          const { userId, name, tier, logo, text, websiteLink, freeGolfers, sponsorPrice, isUpgrade } = session.metadata;
 
           const payload = {
             userId,
@@ -124,7 +124,7 @@ export default function Sponsor() {
             text: text || undefined,
             websiteLink: websiteLink || undefined,
             freeGolfers: JSON.parse(freeGolfers || "[]"),
-            price: parseFloat(price),
+            price: parseFloat(sponsorPrice),
           };
 
           const endpoint = isUpgrade === "true" ? "/api/sponsor/upgrade" : "/api/sponsor";
@@ -230,7 +230,7 @@ export default function Sponsor() {
           text: text || undefined,
           websiteLink: websiteLink || undefined,
           freeGolfers,
-          price: selectedTier.price,
+          sponsorPrice: selectedTier.price, // Renamed to avoid conflict
         }),
         headers: { "Content-Type": "application/json" },
       });
@@ -329,7 +329,7 @@ export default function Sponsor() {
             text: editSponsor.text || undefined,
             websiteLink: editSponsor.websiteLink || undefined,
             freeGolfers: editSponsor.freeGolfers || [],
-            price: selectedTier.price,
+            sponsorPrice: selectedTier.price, // Renamed to avoid conflict
             isUpgrade: true,
           }),
           headers: { "Content-Type": "application/json" },
