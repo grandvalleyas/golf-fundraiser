@@ -3,940 +3,322 @@
 import { useState, useEffect } from "react";
 import { useUser, SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
-import {
-	Breadcrumb,
-	BreadcrumbItem,
-	BreadcrumbLink,
-	BreadcrumbList,
-	BreadcrumbPage,
-	BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import * as XLSX from "xlsx";
+import { useToast } from "@/components/ui/use-toast";
 
 type Registration = {
-	_id: string;
-	userId: string;
-	paymentStatus: string;
-	spotDetails: {
-		spotId: string;
-		name: string;
-		phone: string;
-		email: string;
-	}[];
+  _id: string;
+  userId: string;
+  paymentStatus: string;
+  name: string;
+  email: string;
+  phone: string;
+  preferredGolfers: string[];
+  isFirstYearAlumni: boolean;
+  payForPreferred: string[];
 };
 
 type Team = {
-	_id: string;
-	name: string;
-	isPrivate: boolean;
-	creatorId: string;
-	members: { spotId: string; registrationId: string }[];
+  _id: string;
+  name: string;
+  isPrivate: boolean;
+  creatorId: string;
+  members: { spotId: string; registrationId: string }[];
 };
 
 type Sponsor = {
-	_id: string;
-	userId: string;
-	name: string;
-	price: number;
-	logo: string;
-	websiteLink: string;
+  _id: string;
+  userId: string;
+  name: string;
+  price: number;
+  logo: string;
+  websiteLink: string;
 };
 
-type SortConfig = {
-	key: string;
-	direction: "asc" | "desc";
+type TableRowData = {
+  type: "User" | "Reservation" | "Team" | "Sponsor";
+  userId: string;
+  name: string;
+  email: string;
+  phone: string;
+  paymentStatus: string;
+  spotsPurchased?: number;
+  preferredGolfers?: string;
+  isFirstYearAlumni?: boolean;
+  payForPreferred?: string;
+  teamName?: string;
+  teamType?: string;
+  teamCreatorId?: string;
+  teamMembers?: string;
+  sponsorPrice?: number;
+  sponsorLogo?: string;
+  sponsorWebsite?: string;
 };
 
 export default function AdminDashboard() {
-	const { user } = useUser();
-	const [registrations, setRegistrations] = useState<Registration[]>([]);
-	const [teams, setTeams] = useState<Team[]>([]);
-	const [sponsors, setSponsors] = useState<Sponsor[]>([]);
-	const [loading, setLoading] = useState(true);
-	const [searchTerms, setSearchTerms] = useState({
-		paidUsers: "",
-		reservations: "",
-		teams: "",
-		sponsors: "",
-	});
-	const [currentPage, setCurrentPage] = useState({
-		paidUsers: 1,
-		reservations: 1,
-		teams: 1,
-		sponsors: 1,
-	});
-	const [sortConfig, setSortConfig] = useState<SortConfig>({
-		key: "",
-		direction: "asc",
-	});
-	const itemsPerPage = 5;
+  const { user } = useUser();
+  const { toast } = useToast();
+  const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [sponsors, setSponsors] = useState<Sponsor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [tableData, setTableData] = useState<TableRowData[]>([]);
 
-	useEffect(() => {
-		const fetchData = async () => {
-			if (!user) return;
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
 
-			const isAdmin = user.publicMetadata?.role === "admin";
-			if (!isAdmin) {
-				setLoading(false);
-				return;
-			}
+      const isAdmin = user.publicMetadata?.role === "admin";
+      if (!isAdmin) {
+        setLoading(false);
+        return;
+      }
 
-			try {
-				const regResponse = await fetch("/api/admin/registrations");
-				const regData = await regResponse.json();
-				setRegistrations(regData || []);
+      try {
+        const regResponse = await fetch("/api/admin/registrations");
+        const regData = await regResponse.json();
+        setRegistrations(regData || []);
 
-				const teamResponse = await fetch("/api/teams");
-				const teamData = await teamResponse.json();
-				setTeams(teamData || []);
+        const teamResponse = await fetch("/api/teams");
+        const teamData = await teamResponse.json();
+        setTeams(teamData || []);
 
-				const sponsorResponse = await fetch("/api/admin/sponsors");
-				const sponsorData = await sponsorResponse.json();
-				setSponsors(sponsorData || []);
-			} catch (err) {
-				console.error("Error fetching admin data:", err);
-			} finally {
-				setLoading(false);
-			}
-		};
+        const sponsorResponse = await fetch("/api/admin/sponsors");
+        const sponsorData = await sponsorResponse.json();
+        setSponsors(sponsorData || []);
+      } catch (err) {
+        console.error("Error fetching admin data:", err);
+        toast({
+          title: "Error",
+          description: "Failed to load data",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
 
-		fetchData();
-	}, [user]);
+    fetchData();
+  }, [user, toast]);
 
-	const paidRegistrations = registrations
-		.filter((reg) => reg.paymentStatus === "completed")
-		.filter((reg) =>
-			reg.userId
-				.toLowerCase()
-				.includes(searchTerms.paidUsers.toLowerCase())
-		);
-	const sortedPaidRegistrations = [...paidRegistrations].sort((a, b) => {
-		if (!sortConfig.key) return 0;
-		const aValue = a[sortConfig.key as keyof Registration] || "";
-		const bValue = b[sortConfig.key as keyof Registration] || "";
-		if (typeof aValue === "string" && typeof bValue === "string") {
-			return sortConfig.direction === "asc"
-				? aValue.localeCompare(bValue)
-				: bValue.localeCompare(aValue);
-		}
-		return sortConfig.direction === "asc" ? 1 : -1;
-	});
-	const paginatedPaidRegistrations = sortedPaidRegistrations.slice(
-		(currentPage.paidUsers - 1) * itemsPerPage,
-		currentPage.paidUsers * itemsPerPage
-	);
+  useEffect(() => {
+    const buildTableData = () => {
+      const data: TableRowData[] = [];
 
-	const allReservations = registrations.flatMap((reg) =>
-		reg.spotDetails.map((spot) => ({
-			...spot,
-			userId: reg.userId,
-			paymentStatus: reg.paymentStatus,
-		}))
-	);
-	const filteredReservations = allReservations.filter((spot) =>
-		[spot.name, spot.phone, spot.email, spot.userId].some((field) =>
-			field
-				?.toLowerCase()
-				.includes(searchTerms.reservations.toLowerCase())
-		)
-	);
-	const sortedReservations = [...filteredReservations].sort((a, b) => {
-		if (!sortConfig.key) return 0;
-		const aValue =
-			a[sortConfig.key as keyof (typeof allReservations)[number]] || "";
-		const bValue =
-			b[sortConfig.key as keyof (typeof allReservations)[number]] || "";
-		if (typeof aValue === "string" && typeof bValue === "string") {
-			return sortConfig.direction === "asc"
-				? aValue.localeCompare(bValue)
-				: bValue.localeCompare(aValue);
-		}
-		return sortConfig.direction === "asc" ? 1 : -1;
-	});
-	const paginatedReservations = sortedReservations.slice(
-		(currentPage.reservations - 1) * itemsPerPage,
-		currentPage.reservations * itemsPerPage
-	);
+      // Paid Users
+      const paidRegistrations = registrations.filter((reg) => reg.paymentStatus === "completed");
+      paidRegistrations.forEach((reg) => {
+        data.push({
+          type: "User",
+          userId: reg.userId,
+          name: reg.name || "N/A",
+          email: reg.email || "N/A",
+          phone: reg.phone || "N/A",
+          paymentStatus: reg.paymentStatus,
+          spotsPurchased: (reg.preferredGolfers?.length || 0) + 1,
+          preferredGolfers: reg.preferredGolfers?.join(", ") || "None",
+          isFirstYearAlumni: reg.isFirstYearAlumni,
+          payForPreferred: reg.payForPreferred?.join(", ") || "None",
+        });
+      });
 
-	const filteredTeams = teams.filter(
-		(team) =>
-			team.name.toLowerCase().includes(searchTerms.teams.toLowerCase()) ||
-			team.creatorId
-				.toLowerCase()
-				.includes(searchTerms.teams.toLowerCase())
-	);
-	const sortedTeams = [...filteredTeams].sort((a, b) => {
-		if (!sortConfig.key) return 0;
-		const aValue = a[sortConfig.key as keyof Team] || "";
-		const bValue = b[sortConfig.key as keyof Team] || "";
-		if (typeof aValue === "string" && typeof bValue === "string") {
-			return sortConfig.direction === "asc"
-				? aValue.localeCompare(bValue)
-				: bValue.localeCompare(aValue);
-		}
-		return sortConfig.direction === "asc" ? 1 : -1;
-	});
-	const paginatedTeams = sortedTeams.slice(
-		(currentPage.teams - 1) * itemsPerPage,
-		currentPage.teams * itemsPerPage
-	);
+      // Reservations
+      registrations.forEach((reg) => {
+        data.push({
+          type: "Reservation",
+          userId: reg.userId,
+          name: reg.name || "N/A",
+          email: reg.email || "N/A",
+          phone: reg.phone || "N/A",
+          paymentStatus: reg.paymentStatus,
+          preferredGolfers: reg.preferredGolfers?.join(", ") || "None",
+          isFirstYearAlumni: reg.isFirstYearAlumni,
+          payForPreferred: reg.payForPreferred?.join(", ") || "None",
+        });
+      });
 
-	const filteredSponsors = sponsors.filter(
-		(sponsor) =>
-			sponsor.name
-				.toLowerCase()
-				.includes(searchTerms.sponsors.toLowerCase()) ||
-			sponsor.userId
-				.toLowerCase()
-				.includes(searchTerms.sponsors.toLowerCase())
-	);
-	const sortedSponsors = [...filteredSponsors].sort((a, b) => {
-		if (!sortConfig.key) return 0;
-		const aValue = a[sortConfig.key as keyof Sponsor] || "";
-		const bValue = b[sortConfig.key as keyof Sponsor] || "";
-		if (typeof aValue === "string" && typeof bValue === "string") {
-			return sortConfig.direction === "asc"
-				? aValue.localeCompare(bValue)
-				: bValue.localeCompare(aValue);
-		} else if (typeof aValue === "number" && typeof bValue === "number") {
-			return sortConfig.direction === "asc"
-				? aValue - bValue
-				: bValue - aValue;
-		}
-		return sortConfig.direction === "asc" ? 1 : -1;
-	});
-	const paginatedSponsors = sortedSponsors.slice(
-		(currentPage.sponsors - 1) * itemsPerPage,
-		currentPage.sponsors * itemsPerPage
-	);
+      // Teams
+      teams.forEach((team) => {
+        data.push({
+          type: "Team",
+          userId: team.creatorId,
+          name: "N/A",
+          email: "N/A",
+          phone: "N/A",
+          paymentStatus: "N/A",
+          teamName: team.name,
+          teamType: team.isPrivate ? "Private" : "Public",
+          teamCreatorId: team.creatorId,
+          teamMembers: team.members.map((m) => m.registrationId).join(", ") || "None",
+        });
+      });
 
-	const handleSort = (key: string) => {
-		setSortConfig((prev) => ({
-			key,
-			direction:
-				prev.key === key && prev.direction === "asc" ? "desc" : "asc",
-		}));
-	};
+      // Sponsors
+      sponsors.forEach((sponsor) => {
+        data.push({
+          type: "Sponsor",
+          userId: sponsor.userId,
+          name: sponsor.name,
+          email: "N/A",
+          phone: "N/A",
+          paymentStatus: "N/A",
+          sponsorPrice: sponsor.price,
+          sponsorLogo: sponsor.logo,
+          sponsorWebsite: sponsor.websiteLink,
+        });
+      });
 
-	const handlePageChange = (
-		section: keyof typeof currentPage,
-		page: number
-	) => {
-		setCurrentPage((prev) => ({ ...prev, [section]: page }));
-	};
+      setTableData(data);
+    };
 
-	const exportToExcel = () => {
-		const data = allReservations.map((reservation) => ({
-			"Name": reservation.name,
-			"Email": reservation.email,
-			"Payment Status": reservation.paymentStatus,
-		}));
-		const worksheet = XLSX.utils.json_to_sheet(data);
-		const workbook = XLSX.utils.book_new();
-		XLSX.utils.book_append_sheet(workbook, worksheet, "Registrations");
-		XLSX.writeFile(workbook, "registrations.xlsx");
-	};
+    if (!loading) {
+      buildTableData();
+    }
+  }, [registrations, teams, sponsors, loading]);
 
-	if (!user) {
-		return <RedirectToSignIn />;
-	}
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(tableData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Admin Data");
+    XLSX.writeFile(workbook, "admin_data.xlsx");
+  };
 
-	const isAdmin = user.publicMetadata?.role === "admin";
-	if (!isAdmin) {
-		return (
-			<div className="container mx-auto px-4 py-8">
-				<h1 className="text-2xl font-bold">Unauthorized</h1>
-				<p className="text-muted-foreground">
-					You do not have access to this dashboard.
-				</p>
-			</div>
-		);
-	}
+  const sendEmailWithAttachment = async () => {
+    try {
+      const response = await fetch("/api/admin/send-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user?.primaryEmailAddress?.emailAddress }),
+      });
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Report sent to your email.",
+        });
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to send report",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred while sending the report",
+        variant: "destructive",
+      });
+    }
+  };
 
-	return (
-		<div>
-			<header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-				<div className="flex items-center gap-2">
-					<Separator orientation="vertical" className="mr-2 h-4" />
-					<Breadcrumb>
-						<BreadcrumbList>
-							<BreadcrumbItem className="hidden md:block">
-								<BreadcrumbLink href="/admin">
-									Admin
-								</BreadcrumbLink>
-							</BreadcrumbItem>
-							<BreadcrumbSeparator className="hidden md:block" />
-							<BreadcrumbItem>
-								<BreadcrumbPage>Dashboard</BreadcrumbPage>
-							</BreadcrumbItem>
-						</BreadcrumbList>
-					</Breadcrumb>
-				</div>
-			</header>
-			<div className="flex flex-1 flex-col gap-4 p-4">
-				{loading ? (
-					<p className="text-muted-foreground">Loading data...</p>
-				) : (
-					<div className="space-y-8">
-						<Card>
-							<CardHeader>
-								<CardTitle className="pb-4">
-									Users Who Paid ({paidRegistrations.length})
-								</CardTitle>
-								<Input
-									placeholder="Search by User ID..."
-									value={searchTerms.paidUsers}
-									onChange={(e) =>
-										setSearchTerms((prev) => ({
-											...prev,
-											paidUsers: e.target.value,
-										}))
-									}
-									className="w-full max-w-sm"
-								/>
-							</CardHeader>
-							<CardContent>
-								{paidRegistrations.length === 0 ? (
-									<p className="text-muted-foreground">
-										No paid registrations found.
-									</p>
-								) : (
-									<>
-										<Table>
-											<TableHeader>
-												<TableRow>
-													<TableHead
-														onClick={() =>
-															handleSort("userId")
-														}
-														className="cursor-pointer">
-														User ID{" "}
-														{sortConfig.key ===
-														"userId"
-															? sortConfig.direction ===
-															  "asc"
-																? "↑"
-																: "↓"
-															: ""}
-													</TableHead>
-													<TableHead
-														onClick={() =>
-															handleSort(
-																"spotDetails"
-															)
-														}
-														className="cursor-pointer">
-														Spots Purchased{" "}
-														{sortConfig.key ===
-														"spotDetails"
-															? sortConfig.direction ===
-															  "asc"
-																? "↑"
-																: "↓"
-															: ""}
-													</TableHead>
-												</TableRow>
-											</TableHeader>
-											<TableBody>
-												{paginatedPaidRegistrations.map(
-													(reg) => (
-														<TableRow key={reg._id}>
-															<TableCell>
-																{reg.userId}
-															</TableCell>
-															<TableCell>
-																{
-																	reg
-																		.spotDetails
-																		.length
-																}
-															</TableCell>
-														</TableRow>
-													)
-												)}
-											</TableBody>
-										</Table>
-										<div className="flex justify-between mt-2">
-											<Button
-												onClick={() =>
-													handlePageChange(
-														"paidUsers",
-														currentPage.paidUsers -
-															1
-													)
-												}
-												disabled={
-													currentPage.paidUsers === 1
-												}>
-												Previous
-											</Button>
-											<span>
-												Page {currentPage.paidUsers} of{" "}
-												{Math.ceil(
-													paidRegistrations.length /
-														itemsPerPage
-												)}
-											</span>
-											<Button
-												onClick={() =>
-													handlePageChange(
-														"paidUsers",
-														currentPage.paidUsers +
-															1
-													)
-												}
-												disabled={
-													currentPage.paidUsers *
-														itemsPerPage >=
-													paidRegistrations.length
-												}>
-												Next
-											</Button>
-										</div>
-									</>
-								)}
-							</CardContent>
-						</Card>
+  if (!user) {
+    return <RedirectToSignIn />;
+  }
 
-						<Card>
-							<CardHeader>
-								<CardTitle className="pb-4">
-									All Reservations ({allReservations.length})
-								</CardTitle>
-								<div className="flex justify-between items-center">
-									<Input
-										placeholder="Search by Name, Phone, Email, or User ID..."
-										value={searchTerms.reservations}
-										onChange={(e) =>
-											setSearchTerms((prev) => ({
-												...prev,
-												reservations: e.target.value,
-											}))
-										}
-										className="w-full max-w-sm mt-2"
-									/>
-									<Button
-										onClick={exportToExcel}
-										disabled={allReservations.length === 0}
-										className="ml-4">
-										Export to Excel
-									</Button>
-								</div>
-							</CardHeader>
-							<CardContent>
-								{allReservations.length === 0 ? (
-									<p className="text-muted-foreground">
-										No reservations found.
-									</p>
-								) : (
-									<>
-										<Table>
-											<TableHeader>
-												<TableRow>
-													<TableHead
-														onClick={() =>
-															handleSort("userId")
-														}
-														className="cursor-pointer">
-														User ID{" "}
-														{sortConfig.key ===
-														"userId"
-															? sortConfig.direction ===
-															  "asc"
-																? "↑"
-																: "↓"
-															: ""}
-													</TableHead>
-													<TableHead
-														onClick={() =>
-															handleSort("name")
-														}
-														className="cursor-pointer">
-														Name{" "}
-														{sortConfig.key ===
-														"name"
-															? sortConfig.direction ===
-															  "asc"
-																? "↑"
-																: "↓"
-															: ""}
-													</TableHead>
-													<TableHead
-														onClick={() =>
-															handleSort("phone")
-														}
-														className="cursor-pointer">
-														Phone{" "}
-														{sortConfig.key ===
-														"phone"
-															? sortConfig.direction ===
-															  "asc"
-																? "↑"
-																: "↓"
-															: ""}
-													</TableHead>
-													<TableHead
-														onClick={() =>
-															handleSort("email")
-														}
-														className="cursor-pointer">
-														Email{" "}
-														{sortConfig.key ===
-														"email"
-															? sortConfig.direction ===
-															  "asc"
-																? "↑"
-																: "↓"
-															: ""}
-													</TableHead>
-													<TableHead
-														onClick={() =>
-															handleSort(
-																"paymentStatus"
-															)
-														}
-														className="cursor-pointer">
-														Payment Status{" "}
-														{sortConfig.key ===
-														"paymentStatus"
-															? sortConfig.direction ===
-															  "asc"
-																? "↑"
-																: "↓"
-															: ""}
-													</TableHead>
-												</TableRow>
-											</TableHeader>
-											<TableBody>
-												{paginatedReservations.map(
-													(spot) => (
-														<TableRow
-															key={spot.spotId}>
-															<TableCell>
-																{spot.userId}
-															</TableCell>
-															<TableCell>
-																{spot.name}
-															</TableCell>
-															<TableCell>
-																{spot.phone}
-															</TableCell>
-															<TableCell>
-																{spot.email}
-															</TableCell>
-															<TableCell>
-																{
-																	spot.paymentStatus
-																}
-															</TableCell>
-														</TableRow>
-													)
-												)}
-											</TableBody>
-										</Table>
-										<div className="flex justify-between mt-2">
-											<Button
-												onClick={() =>
-													handlePageChange(
-														"reservations",
-														currentPage.reservations -
-															1
-													)
-												}
-												disabled={
-													currentPage.reservations ===
-													1
-												}>
-												Previous
-											</Button>
-											<span>
-												Page {currentPage.reservations}{" "}
-												of{" "}
-												{Math.ceil(
-													allReservations.length /
-														itemsPerPage
-												)}
-											</span>
-											<Button
-												onClick={() =>
-													handlePageChange(
-														"reservations",
-														currentPage.reservations +
-															1
-													)
-												}
-												disabled={
-													currentPage.reservations *
-														itemsPerPage >=
-													allReservations.length
-												}>
-												Next
-											</Button>
-										</div>
-									</>
-								)}
-							</CardContent>
-						</Card>
+  const isAdmin = user.publicMetadata?.role === "admin";
+  if (!isAdmin) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold">Unauthorized</h1>
+        <p className="text-muted-foreground">You do not have access to this dashboard.</p>
+      </div>
+    );
+  }
 
-						<Card>
-							<CardHeader>
-								<CardTitle className="pb-4">
-									All Teams ({teams.length})
-								</CardTitle>
-								<Input
-									placeholder="Search by Name or Creator ID..."
-									value={searchTerms.teams}
-									onChange={(e) =>
-										setSearchTerms((prev) => ({
-											...prev,
-											teams: e.target.value,
-										}))
-									}
-									className="w-full max-w-sm mt-2"
-								/>
-							</CardHeader>
-							<CardContent>
-								{teams.length === 0 ? (
-									<p className="text-muted-foreground">
-										No teams found.
-									</p>
-								) : (
-									<>
-										<Table>
-											<TableHeader>
-												<TableRow>
-													<TableHead
-														onClick={() =>
-															handleSort("name")
-														}
-														className="cursor-pointer">
-														Team Name{" "}
-														{sortConfig.key ===
-														"name"
-															? sortConfig.direction ===
-															  "asc"
-																? "↑"
-																: "↓"
-															: ""}
-													</TableHead>
-													<TableHead
-														onClick={() =>
-															handleSort(
-																"isPrivate"
-															)
-														}
-														className="cursor-pointer">
-														Type{" "}
-														{sortConfig.key ===
-														"isPrivate"
-															? sortConfig.direction ===
-															  "asc"
-																? "↑"
-																: "↓"
-															: ""}
-													</TableHead>
-													<TableHead
-														onClick={() =>
-															handleSort(
-																"creatorId"
-															)
-														}
-														className="cursor-pointer">
-														Creator ID{" "}
-														{sortConfig.key ===
-														"creatorId"
-															? sortConfig.direction ===
-															  "asc"
-																? "↑"
-																: "↓"
-															: ""}
-													</TableHead>
-													<TableHead
-														onClick={() =>
-															handleSort(
-																"members"
-															)
-														}
-														className="cursor-pointer">
-														Members{" "}
-														{sortConfig.key ===
-														"members"
-															? sortConfig.direction ===
-															  "asc"
-																? "↑"
-																: "↓"
-															: ""}
-													</TableHead>
-												</TableRow>
-											</TableHeader>
-											<TableBody>
-												{paginatedTeams.map((team) => (
-													<TableRow key={team._id}>
-														<TableCell>
-															{team.name}
-														</TableCell>
-														<TableCell>
-															{team.isPrivate
-																? "Private"
-																: "Public"}
-														</TableCell>
-														<TableCell>
-															{team.creatorId}
-														</TableCell>
-														<TableCell>
-															<ul>
-																{team.members.map(
-																	(
-																		member,
-																		i
-																	) => {
-																		return (
-																			<li
-																				key={
-																					i
-																				}>
-																				{
-																					member.registrationId
-																				}
-																			</li>
-																		);
-																	}
-																)}
-															</ul>
-														</TableCell>
-													</TableRow>
-												))}
-											</TableBody>
-										</Table>
-										<div className="flex justify-between mt-2">
-											<Button
-												onClick={() =>
-													handlePageChange(
-														"teams",
-														currentPage.teams - 1
-													)
-												}
-												disabled={
-													currentPage.teams === 1
-												}>
-												Previous
-											</Button>
-											<span>
-												Page {currentPage.teams} of{" "}
-												{Math.ceil(
-													teams.length / itemsPerPage
-												)}
-											</span>
-											<Button
-												onClick={() =>
-													handlePageChange(
-														"teams",
-														currentPage.teams + 1
-													)
-												}
-												disabled={
-													currentPage.teams *
-														itemsPerPage >=
-													teams.length
-												}>
-												Next
-											</Button>
-										</div>
-									</>
-								)}
-							</CardContent>
-						</Card>
-
-						<Card>
-							<CardHeader>
-								<CardTitle className="pb-4">
-									All Sponsors ({sponsors.length})
-								</CardTitle>
-								<Input
-									placeholder="Search by Name or User ID..."
-									value={searchTerms.sponsors}
-									onChange={(e) =>
-										setSearchTerms((prev) => ({
-											...prev,
-											sponsors: e.target.value,
-										}))
-									}
-									className="w-full max-w-sm mt-2"
-								/>
-							</CardHeader>
-							<CardContent>
-								{sponsors.length === 0 ? (
-									<p className="text-muted-foreground">
-										No sponsors found.
-									</p>
-								) : (
-									<>
-										<Table>
-											<TableHeader>
-												<TableRow>
-													<TableHead
-														onClick={() =>
-															handleSort("userId")
-														}
-														className="cursor-pointer">
-														User ID{" "}
-														{sortConfig.key ===
-														"userId"
-															? sortConfig.direction ===
-															  "asc"
-																? "↑"
-																: "↓"
-															: ""}
-													</TableHead>
-													<TableHead
-														onClick={() =>
-															handleSort("name")
-														}
-														className="cursor-pointer">
-														Name{" "}
-														{sortConfig.key ===
-														"name"
-															? sortConfig.direction ===
-															  "asc"
-																? "↑"
-																: "↓"
-															: ""}
-													</TableHead>
-													<TableHead
-														onClick={() =>
-															handleSort("price")
-														}
-														className="cursor-pointer">
-														Price{" "}
-														{sortConfig.key ===
-														"price"
-															? sortConfig.direction ===
-															  "asc"
-																? "↑"
-																: "↓"
-															: ""}
-													</TableHead>
-													<TableHead
-														onClick={() =>
-															handleSort("logo")
-														}
-														className="cursor-pointer">
-														Logo URL{" "}
-														{sortConfig.key ===
-														"logo"
-															? sortConfig.direction ===
-															  "asc"
-																? "↑"
-																: "↓"
-															: ""}
-													</TableHead>
-													<TableHead
-														onClick={() =>
-															handleSort(
-																"websiteLink"
-															)
-														}
-														className="cursor-pointer">
-														Website{" "}
-														{sortConfig.key ===
-														"websiteLink"
-															? sortConfig.direction ===
-															  "asc"
-																? "↑"
-																: "↓"
-															: ""}
-													</TableHead>
-												</TableRow>
-											</TableHeader>
-											<TableBody>
-												{paginatedSponsors.map(
-													(sponsor) => (
-														<TableRow
-															key={sponsor._id}>
-															<TableCell>
-																{sponsor.userId}
-															</TableCell>
-															<TableCell>
-																{sponsor.name}
-															</TableCell>
-															<TableCell>
-																$
-																{sponsor.price.toLocaleString()}
-															</TableCell>
-															<TableCell>
-																{sponsor.logo}
-															</TableCell>
-															<TableCell>
-																<a
-																	href={
-																		sponsor.websiteLink
-																	}
-																	target="_blank"
-																	rel="noopener noreferrer"
-																	className="text-blue-500 hover:underline">
-																	{
-																		sponsor.websiteLink
-																	}
-																</a>
-															</TableCell>
-														</TableRow>
-													)
-												)}
-											</TableBody>
-										</Table>
-										<div className="flex justify-between mt-2">
-											<Button
-												onClick={() =>
-													handlePageChange(
-														"sponsors",
-														currentPage.sponsors - 1
-													)
-												}
-												disabled={
-													currentPage.sponsors === 1
-												}>
-												Previous
-											</Button>
-											<span>
-												Page {currentPage.sponsors} of{" "}
-												{Math.ceil(
-													sponsors.length /
-														itemsPerPage
-												)}
-											</span>
-											<Button
-												onClick={() =>
-													handlePageChange(
-														"sponsors",
-														currentPage.sponsors + 1
-													)
-												}
-												disabled={
-													currentPage.sponsors *
-														itemsPerPage >=
-													sponsors.length
-												}>
-												Next
-											</Button>
-										</div>
-									</>
-								)}
-							</CardContent>
-						</Card>
-					</div>
-				)}
-			</div>
-		</div>
-	);
+  return (
+    <div>
+      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+        <div className="flex items-center gap-2">
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem className="hidden md:block">
+                <BreadcrumbLink href="/admin">Admin</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="hidden md:block" />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Dashboard</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+      </header>
+      <div className="flex flex-1 flex-col gap-4 p-4">
+        {loading ? (
+          <p className="text-muted-foreground">Loading data...</p>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle className="pb-4">Admin Data Overview</CardTitle>
+              <div className="flex space-x-2">
+                <Button onClick={exportToExcel}>Export to Excel</Button>
+                <Button onClick={sendEmailWithAttachment}>Send Report via Email</Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Type</TableHead>
+                    <TableHead>User ID</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>Payment Status</TableHead>
+                    <TableHead>Spots Purchased</TableHead>
+                    <TableHead>Preferred Golfers</TableHead>
+                    <TableHead>First Year Alumni</TableHead>
+                    <TableHead>Pay for Preferred</TableHead>
+                    <TableHead>Team Name</TableHead>
+                    <TableHead>Team Type</TableHead>
+                    <TableHead>Team Creator ID</TableHead>
+                    <TableHead>Team Members</TableHead>
+                    <TableHead>Sponsor Price</TableHead>
+                    <TableHead>Sponsor Logo</TableHead>
+                    <TableHead>Sponsor Website</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {tableData.map((row, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{row.type}</TableCell>
+                      <TableCell>{row.userId}</TableCell>
+                      <TableCell>{row.name}</TableCell>
+                      <TableCell>{row.email}</TableCell>
+                      <TableCell>{row.phone}</TableCell>
+                      <TableCell>{row.paymentStatus}</TableCell>
+                      <TableCell>{row.spotsPurchased || "N/A"}</TableCell>
+                      <TableCell>{row.preferredGolfers || "N/A"}</TableCell>
+                      <TableCell>{row.isFirstYearAlumni !== undefined ? (row.isFirstYearAlumni ? "Yes" : "No") : "N/A"}</TableCell>
+                      <TableCell>{row.payForPreferred || "N/A"}</TableCell>
+                      <TableCell>{row.teamName || "N/A"}</TableCell>
+                      <TableCell>{row.teamType || "N/A"}</TableCell>
+                      <TableCell>{row.teamCreatorId || "N/A"}</TableCell>
+                      <TableCell>{row.teamMembers || "N/A"}</TableCell>
+                      <TableCell>{row.sponsorPrice !== undefined ? `$${row.sponsorPrice.toLocaleString()}` : "N/A"}</TableCell>
+                      <TableCell>{row.sponsorLogo || "N/A"}</TableCell>
+                      <TableCell>
+                        {row.sponsorWebsite ? (
+                          <a href={row.sponsorWebsite} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                            {row.sponsorWebsite}
+                          </a>
+                        ) : (
+                          "N/A"
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
 }
