@@ -3,17 +3,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import {
-	Accordion,
-	AccordionContent,
-	AccordionItem,
-	AccordionTrigger,
-} from "@/components/ui/accordion"; // Shadcn Accordion components
 import { SignInButton, SignUpButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import Link from "next/link";
 import Image from "next/image";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CircleAlert } from "lucide-react";
 
 export default function Home() {
 	const images = [
