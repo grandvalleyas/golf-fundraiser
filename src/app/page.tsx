@@ -10,6 +10,70 @@ import Image from "next/image";
 export default function Home() {
 	const images = [
 		{
+			title: "Group photo",
+			url: "https://res.cloudinary.com/dazxax791/image/upload/v1754545301/IMG_3597_kv7jix.jpg",
+		},
+		{
+			title: "Coach Wooster",
+			url: "https://res.cloudinary.com/dazxax791/image/upload/v1754545301/IMG_3605_jetpkk.jpg",
+		},
+		{
+			title: "Group photo",
+			url: "https://res.cloudinary.com/dazxax791/image/upload/v1754545301/IMG_3601_llhbcc.jpg",
+		},
+		{
+			title: "Group Photo",
+			url: "https://res.cloudinary.com/dazxax791/image/upload/v1754545301/IMG_3606_om9qjf.jpg",
+		},
+		{
+			title: "Group Photo",
+			url: "https://res.cloudinary.com/dazxax791/image/upload/v1754545301/IMG_3658_zlehhz.jpg",
+		},
+		{
+			title: "Group Photo",
+			url: "https://res.cloudinary.com/dazxax791/image/upload/v1754545301/IMG_3655_q3012r.jpg",
+		},
+		{
+			title: "Group Photo",
+			url: "https://res.cloudinary.com/dazxax791/image/upload/v1754545302/IMG_3620_tc7odv.jpg",
+		},
+		{
+			title: "Group Photo",
+			url: "https://res.cloudinary.com/dazxax791/image/upload/v1754545303/IMG_3700_eb8f81.jpg",
+		},
+		{
+			title: "Group Photo",
+			url: "https://res.cloudinary.com/dazxax791/image/upload/v1754545303/IMG_3731_uze2ez.jpg",
+		},
+		{
+			title: "Group Photo",
+			url: "https://res.cloudinary.com/dazxax791/image/upload/v1754545303/IMG_3766_zq8tzn.jpg",
+		},
+		{
+			title: "Group Photo",
+			url: "https://res.cloudinary.com/dazxax791/image/upload/v1754545302/IMG_3666_oa7jpu.jpg",
+		},
+		{
+			title: "Group Photo",
+			url: "https://res.cloudinary.com/dazxax791/image/upload/v1754545303/IMG_3720_s7qnwd.jpg",
+		},
+		{
+			title: "Group Photo",
+			url: "https://res.cloudinary.com/dazxax791/image/upload/v1754545302/IMG_3684_e7pne6.jpg",
+		},
+		{
+			title: "Group Photo",
+			url: "https://res.cloudinary.com/dazxax791/image/upload/v1754545302/IMG_3625_qqboxq.jpg",
+		},
+		{
+			title: "Group Photo",
+			url: "https://res.cloudinary.com/dazxax791/image/upload/v1754545302/IMG_3690_se5teq.jpg",
+		},
+		{
+			title: "Group Photo",
+			url: "https://res.cloudinary.com/dazxax791/image/upload/v1754545302/IMG_3663_htuwu5.jpg",
+		},
+		{
 			title: "Stadium View",
 			url: "https://res.cloudinary.com/dazxax791/image/upload/v1741934404/popsilhfutww1ita2wjo.jpg",
 		},
@@ -48,7 +112,7 @@ export default function Home() {
 					</p>
 					<SignedOut>
 						<div className="space-x-2 sm:space-x-4">
-							<SignUpButton
+							{/* <SignUpButton
 								mode="redirect"
 								redirectUrl="/register">
 								<Button className="text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3 bg-primary hover:bg-accent">
@@ -63,10 +127,11 @@ export default function Home() {
 									className="text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3">
 									Sign In
 								</Button>
-							</SignInButton>
+							</SignInButton> */}
+							<p>Event has passed!</p>
 						</div>
 					</SignedOut>
-					<SignedIn>
+					{/* <SignedIn>
 						<div className="flex flex-row gap-2 sm:gap-6">
 							<Button className="text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3 bg-primary hover:bg-accent">
 								<Link href="/register">Register Now</Link>
@@ -75,7 +140,7 @@ export default function Home() {
 								<Link href="/sponsor">Sponsor a Hole</Link>
 							</Button>
 						</div>
-					</SignedIn>
+					</SignedIn> */}
 				</div>
 			</section>
 
@@ -135,7 +200,7 @@ export default function Home() {
 							<div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center">
 								<SignedOut>
 									<div className="space-x-2 sm:space-x-4">
-										<SignUpButton
+										{/* <SignUpButton
 											mode="redirect"
 											redirectUrl="/register">
 											<Button className="text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3 bg-primary hover:bg-accent">
@@ -150,10 +215,11 @@ export default function Home() {
 												className="text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3">
 												Sign In
 											</Button>
-										</SignInButton>
+										</SignInButton> */}
+										<p>Event has passed!</p>
 									</div>
 								</SignedOut>
-								<SignedIn>
+								{/* <SignedIn>
 									<div className="flex flex-row gap-2 sm:gap-6">
 										<Button className="text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3 bg-primary hover:bg-accent">
 											<Link href="/register">
@@ -166,7 +232,7 @@ export default function Home() {
 											</Link>
 										</Button>
 									</div>
-								</SignedIn>
+								</SignedIn> */}
 							</div>
 
 							<Separator className="my-2" />
