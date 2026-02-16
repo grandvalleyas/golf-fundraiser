@@ -4,8 +4,8 @@ import Navbar from "@/app/Navbar";
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata = {
-	title: "44th Annual GVAS Golf Outing",
-	description: "Sign up today for the 44th annual GVAS Golf Outing.",
+	title: "45th Annual GVAS Golf Outing",
+	description: "Sign up today for the 45th annual GVAS Golf Outing.",
 };
 
 export default function RootLayout({
