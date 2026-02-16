@@ -189,7 +189,7 @@ export default function Home() {
 									Description
 								</h3>
 								<p className="text-sm sm:text-base">
-									Join football alumni and friends at the 44th
+									Join football alumni and friends at the 45th
 									Annual Football Alumni Golf Outing for a day
 									on the green followed by a meal, drinks, and
 									post-golf awards.
