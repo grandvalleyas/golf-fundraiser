@@ -149,7 +149,7 @@ export default function Home() {
 					<Card>
 						<CardHeader>
 							<CardTitle className="text-xl sm:text-3xl font-bold text-primary text-center">
-								44th Annual GVSU Football Alumni Golf Outing
+								45th Annual GVSU Football Alumni Golf Outing
 							</CardTitle>
 						</CardHeader>
 						<CardContent className="space-y-8">
