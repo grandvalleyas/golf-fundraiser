@@ -165,7 +165,7 @@ export default function Home() {
 									Date and Time
 								</h3>
 								<p className="text-sm sm:text-base">
-									<strong>Date:</strong> Saturday, July 17,
+									<strong>Date:</strong> Friday, July 17,
 									2026
 								</p>
 								<p className="text-sm sm:text-base">
@@ -173,12 +173,12 @@ export default function Home() {
 								</p>
 								<ul className="list-disc pl-5 space-y-1 text-sm sm:text-base">
 									<li>
-										NOON: Registration and open practice
+										8:30 a.m.: Registration and open practice
 										range
 									</li>
-									<li>1:30 p.m.: Shotgun Start</li>
+									<li>9:30 a.m.: Shotgun Start</li>
 									<li>
-										6:00 p.m.: Post-Golf Awards, meal,
+										2:00 p.m.: Post-Golf Awards, meal,
 										beverages, raffle, awards
 									</li>
 								</ul>
