@@ -112,7 +112,7 @@ export default function Home() {
 					</p>
 					<SignedOut>
 						<div className="space-x-2 sm:space-x-4">
-							{/* <SignUpButton
+							<SignUpButton
 								mode="redirect"
 								redirectUrl="/register">
 								<Button className="text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3 bg-primary hover:bg-accent">
@@ -127,11 +127,10 @@ export default function Home() {
 									className="text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3">
 									Sign In
 								</Button>
-							</SignInButton> */}
-							<p>Event has passed!</p>
+							</SignInButton>
 						</div>
 					</SignedOut>
-					{/* <SignedIn>
+					<SignedIn>
 						<div className="flex flex-row gap-2 sm:gap-6">
 							<Button className="text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3 bg-primary hover:bg-accent">
 								<Link href="/register">Register Now</Link>
@@ -140,7 +139,7 @@ export default function Home() {
 								<Link href="/sponsor">Sponsor a Hole</Link>
 							</Button>
 						</div>
-					</SignedIn> */}
+					</SignedIn>
 				</div>
 			</section>
 
@@ -166,8 +165,8 @@ export default function Home() {
 									Date and Time
 								</h3>
 								<p className="text-sm sm:text-base">
-									<strong>Date:</strong> Saturday, June 21,
-									2025
+									<strong>Date:</strong> Saturday, July 17,
+									2026
 								</p>
 								<p className="text-sm sm:text-base">
 									<strong>Time:</strong>
@@ -200,7 +199,7 @@ export default function Home() {
 							<div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center">
 								<SignedOut>
 									<div className="space-x-2 sm:space-x-4">
-										{/* <SignUpButton
+										<SignUpButton
 											mode="redirect"
 											redirectUrl="/register">
 											<Button className="text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3 bg-primary hover:bg-accent">
@@ -215,11 +214,10 @@ export default function Home() {
 												className="text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3">
 												Sign In
 											</Button>
-										</SignInButton> */}
-										<p>Event has passed!</p>
+										</SignInButton>
 									</div>
 								</SignedOut>
-								{/* <SignedIn>
+								<SignedIn>
 									<div className="flex flex-row gap-2 sm:gap-6">
 										<Button className="text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3 bg-primary hover:bg-accent">
 											<Link href="/register">
@@ -232,7 +230,7 @@ export default function Home() {
 											</Link>
 										</Button>
 									</div>
-								</SignedIn> */}
+								</SignedIn>
 							</div>
 
 							<Separator className="my-2" />
