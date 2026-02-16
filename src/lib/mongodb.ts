@@ -19,7 +19,7 @@ clientPromise = global._mongoClientPromise;
 
 export async function connectToDatabase() {
   const client = await clientPromise;
-  const db = client.db("golf_fundraiser");
+  const db = client.db("golf_fundraiser_2026");
 
   // Ensure the registrations collection exists and create an index
   await db.createCollection("registrations", {
