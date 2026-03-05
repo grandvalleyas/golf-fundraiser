@@ -20,7 +20,7 @@ export default function SportPage() {
       {/* Hero */}
       <section className="relative h-[70vh] flex items-center justify-center">
         <Image priority src={config.heroImage} alt={config.name} fill className="object-cover" />
-        <div className="absolute inset-0 bg-black/45" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/65 to-black/50" />
         <div className="relative text-center px-6 max-w-2xl">
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 text-balance">{config.title}</h1>
           <p className="text-base sm:text-lg text-white/80 mb-8 max-w-lg mx-auto">{config.description}</p>
