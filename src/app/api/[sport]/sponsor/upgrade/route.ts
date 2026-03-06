@@ -7,7 +7,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ spor
   const config = getSportConfig(sport);
   const { userId, name, tier, logo, text, websiteLink, freeGolfers, price } = await request.json();
   if (!userId || !name || !tier || price === undefined) return NextResponse.json({ error: "User ID, name, tier, and price are required" }, { status: 400 });
-  if (!logo && !text) return NextResponse.json({ error: "At least one of logo or text must be provided" }, { status: 400 });
+  const tierConfig = config.sponsorTiers.find((t) => t.name === tier);
+  if (!tierConfig) return NextResponse.json({ error: "Invalid tier" }, { status: 400 });
+  if (!tierConfig.category && !logo && !text) return NextResponse.json({ error: "At least one of logo or text must be provided" }, { status: 400 });
 
   try {
     const { db } = await connectToDatabase(config.db.name);

@@ -120,9 +120,11 @@ function SponsorContent() {
     else { setLogoFile(null); setLogoPreview(""); }
   };
 
+  const isPremiumTier = selectedTier?.category != null;
+
   const handleCreate = async () => {
     if (!name || !tier) { toast({ title: "Error", description: "Name and tier are required", variant: "destructive" }); return; }
-    if (!logoFile && !text) { toast({ title: "Error", description: "At least one of logo or text must be provided", variant: "destructive" }); return; }
+    if (!isPremiumTier && !logoFile && !text) { toast({ title: "Error", description: "At least one of logo or text must be provided", variant: "destructive" }); return; }
     setLoading(true);
     try {
       const logoUrl = logoFile ? await uploadLogo(logoFile) : "";
@@ -139,7 +141,7 @@ function SponsorContent() {
 
   const handleSaveEdit = async () => {
     if (!name || !tier) { toast({ title: "Error", description: "Name and tier are required", variant: "destructive" }); return; }
-    if (!logoFile && !logoPreview && !text) { toast({ title: "Error", description: "At least one of logo or text must be provided", variant: "destructive" }); return; }
+    if (!isPremiumTier && !logoFile && !logoPreview && !text) { toast({ title: "Error", description: "At least one of logo or text must be provided", variant: "destructive" }); return; }
     setLoading(true);
     try {
       const logoUrl = logoFile ? await uploadLogo(logoFile) : (logoPreview || sponsor?.logo);
@@ -200,8 +202,8 @@ function SponsorContent() {
   const formFieldsJsx = (
     <div className="bg-card rounded-xl shadow-sm p-6 space-y-5">
       <div><Label>Sponsor Name</Label><Input value={name} onChange={(e) => setName(e.target.value)} className="mt-1" /></div>
-      <div><Label>Logo (optional)</Label><Input type="file" accept="image/*" onChange={handleLogoChange} className="mt-1 cursor-pointer" />{logoPreview && <div className="mt-2"><Image src={logoPreview} alt="Preview" width={80} height={80} className="object-contain rounded" /></div>}</div>
-      <div><Label>Text (optional)</Label><Textarea value={text} onChange={(e) => setText(e.target.value)} className="mt-1" /></div>
+      <div><Label>Logo {isPremiumTier ? "(optional)" : "(required)"}</Label><Input type="file" accept="image/*" onChange={handleLogoChange} className="mt-1 cursor-pointer" />{logoPreview && <div className="mt-2"><Image src={logoPreview} alt="Preview" width={80} height={80} className="object-contain rounded" /></div>}</div>
+      <div><Label>Text {isPremiumTier ? "(optional)" : !logoFile && !logoPreview ? "(required if no logo)" : "(optional)"}</Label><Textarea value={text} onChange={(e) => setText(e.target.value)} className="mt-1" /></div>
       <div><Label>Website Link (optional)</Label><Input value={websiteLink} onChange={(e) => setWebsiteLink(e.target.value)} className="mt-1" /></div>
       {selectedTier && selectedTier.freeGolfers > 0 && (
         <div>
