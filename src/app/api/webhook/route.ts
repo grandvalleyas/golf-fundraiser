@@ -62,13 +62,14 @@ export async function POST(request: Request) {
   try { registrationData = JSON.parse(meta.registrationData || "{}"); } catch { registrationData = {}; }
   if (!registrationData || !Object.keys(registrationData).length) return NextResponse.json({ error: "Invalid metadata" }, { status: 400 });
 
-  const { name, email, phone, preferredGolfers = [], payForPreferred = [], isFirstYearAlumni, _id: registrationId } = registrationData;
+  const { name, email, phone, preferredGolfers = [], payForPreferred = [], isFirstYearAlumni, tshirtSize, _id: registrationId } = registrationData;
   if (!name || !email) return NextResponse.json({ error: "Name and email required" }, { status: 400 });
 
   const isUpdate = meta.isUpdate === "true";
   const docData = {
     name, email, phone, preferredGolfers, payForPreferred,
     isFirstYearAlumni: isFirstYearAlumni === true,
+    ...(tshirtSize ? { tshirtSize } : {}),
     paymentStatus: "completed",
     amount: session.amount_total / 100,
     stripeSessionId: session.id,

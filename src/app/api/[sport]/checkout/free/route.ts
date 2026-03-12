@@ -8,6 +8,7 @@ const registerSchema = z.object({
   name: z.string().min(1),
   email: z.string().email(),
   phone: z.string().min(10),
+  tshirtSize: z.string().optional(),
   preferredGolfers: z.array(z.string()).max(3),
   isFirstYearAlumni: z.boolean(),
   payForPreferred: z.array(z.string()).optional(),

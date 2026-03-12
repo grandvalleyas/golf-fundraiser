@@ -25,6 +25,7 @@ export type SportConfig = {
   heroImage: string;
   galleryImages: { title: string; url: string }[];
   sponsorTiers: SponsorTier[];
+  hasTshirtSize: boolean;
   hasFirstYearAlumniFree: boolean;
   db: { name: string; registrations: string; sponsors: string };
   stripeProductPrefix: string;
@@ -85,6 +86,7 @@ const football: SportConfig = {
     { name: "Dinner Sponsor", price: 3000, freeGolfers: 4, includesGolf: true, description: "Includes foursome, recognition at dinner, hole sponsor sign" },
     { name: "Title Sponsor", price: 10000, freeGolfers: 4, includesGolf: true, description: "Includes foursome, outing recognition, hole sponsor sign, sponsor gift" },
   ],
+  hasTshirtSize: false,
   hasFirstYearAlumniFree: true,
   db: { name: "golf_fundraiser_2026", registrations: "registrations", sponsors: "sponsors" },
   stripeProductPrefix: "Football Golf Outing",
@@ -134,6 +136,7 @@ const wbb: SportConfig = {
     { name: "Silver Sponsor", price: 650, freeGolfers: 4, includesGolf: true, description: "Foursome, name on tee box/recognition at lunch" },
     { name: "Bronze Sponsor", price: 200, freeGolfers: 0, includesGolf: false, description: "Name on tee box/recognition at lunch (no golf)" },
   ],
+  hasTshirtSize: true,
   hasFirstYearAlumniFree: false,
   db: { name: "wbb_golf_fundraiser_2026", registrations: "registrations", sponsors: "sponsors" },
   stripeProductPrefix: "WBB Golf Outing",

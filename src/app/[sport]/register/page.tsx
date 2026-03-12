@@ -11,13 +11,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getSportConfig } from "@/lib/sports";
 import { Trash2 } from "lucide-react";
+
+const TSHIRT_SIZES = ["S", "M", "L", "XL", "2XL", "3XL"] as const;
 
 const registerSchema = z.object({
   name: z.string().min(1, "Name is required").regex(/\S/, "Name cannot be empty"),
   email: z.string().email("Invalid email address").regex(/\S/, "Email cannot be empty"),
   phone: z.string().min(10, "Phone number is required"),
+  tshirtSize: z.string().optional(),
   preferredGolfers: z.array(z.string()).max(3, "Maximum 3 preferred golfers"),
   isFirstYearAlumni: z.boolean(),
   payForPreferred: z.array(z.string()).optional(),
@@ -30,6 +34,7 @@ interface Registration extends RegisterForm {
   userId: string;
   paymentStatus: string;
   amount?: number;
+  tshirtSize?: string;
 }
 
 function RegisterPageContent() {
@@ -50,7 +55,7 @@ function RegisterPageContent() {
 
   const { control, handleSubmit, watch, formState: { errors }, reset, setValue } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { name: "", email: "", phone: "", preferredGolfers: ["", "", ""], isFirstYearAlumni: false, payForPreferred: [] },
+    defaultValues: { name: "", email: "", phone: "", tshirtSize: "", preferredGolfers: ["", "", ""], isFirstYearAlumni: false, payForPreferred: [] },
   });
 
   const currentName = watch("name");
@@ -89,11 +94,27 @@ function RegisterPageContent() {
   useEffect(() => { fetchRegistration(); }, [user, isLoaded]);
 
   useEffect(() => {
-    if (searchParams.get("success") === "true") {
-      toast({ title: "Payment Successful", description: "Your reservation has been updated." });
-      fetchRegistration();
-      router.replace(`/${sport}/register`);
-    }
+    if (searchParams.get("success") !== "true") return;
+    toast({ title: "Payment Successful", description: "Your reservation has been updated." });
+    router.replace(`/${sport}/register`);
+    let attempts = 0;
+    const poll = setInterval(async () => {
+      attempts++;
+      try {
+        const res = await fetch(`${apiBase}/checkout`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.length > 0 && data[0].paymentStatus === "completed") {
+            clearInterval(poll);
+            setRegistration(data[0]);
+            setMode("view");
+            return;
+          }
+        }
+      } catch {}
+      if (attempts >= 10) clearInterval(poll);
+    }, 1500);
+    return () => clearInterval(poll);
   }, [searchParams]);
 
   const handleDeletePreferredGolfer = async (registrationId: string, golfer: string, isPaid: boolean) => {
@@ -115,6 +136,7 @@ function RegisterPageContent() {
     setLoading(true);
     const registrationData = {
       name, email, phone: data.phone,
+      ...(config.hasTshirtSize && data.tshirtSize ? { tshirtSize: data.tshirtSize } : {}),
       preferredGolfers: data.preferredGolfers.filter((g) => g && g.trim() !== ""),
       isFirstYearAlumni: data.isFirstYearAlumni, payForPreferred: data.payForPreferred || [],
       userId: user.id, createdAt: new Date().toISOString(),
@@ -173,6 +195,7 @@ function RegisterPageContent() {
             <div className="text-sm space-y-1 text-muted-foreground">
               <p>{registration.email}</p>
               <p>{registration.phone}</p>
+              {config.hasTshirtSize && registration.tshirtSize && <p>T-Shirt: {registration.tshirtSize}</p>}
             </div>
             {registration.preferredGolfers.length > 0 && (
               <div>
@@ -254,6 +277,18 @@ function RegisterPageContent() {
             <Controller name="phone" control={control} render={({ field }) => <Input id="phone" {...field} className="mt-1" />} />
             {errors.phone && <p className="text-destructive text-xs mt-1">{errors.phone.message}</p>}
           </div>
+
+          {config.hasTshirtSize && (
+            <div>
+              <Label htmlFor="tshirtSize">T-Shirt Size</Label>
+              <Controller name="tshirtSize" control={control} render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger id="tshirtSize" className="mt-1"><SelectValue placeholder="Select size" /></SelectTrigger>
+                  <SelectContent>{TSHIRT_SIZES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                </Select>
+              )} />
+            </div>
+          )}
 
           <div>
             <Label>Preferred Golfers (up to 3)</Label>

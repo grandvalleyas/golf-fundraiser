@@ -17,7 +17,7 @@ import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 
 type Registration = {
   _id: string; userId: string; paymentStatus: string; name: string; email: string;
-  phone: string; preferredGolfers: string[]; isFirstYearAlumni: boolean;
+  phone: string; tshirtSize?: string; preferredGolfers: string[]; isFirstYearAlumni: boolean;
   payForPreferred: string[]; amount: number;
 };
 
@@ -162,18 +162,19 @@ export default function AdminDashboard() {
 
   const exportToExcel = () => {
     const regData = [...registrations.map((r) => ({
-      Name: r.name, Email: r.email, Phone: r.phone, Status: r.paymentStatus,
+      Name: r.name, Email: r.email, Phone: r.phone, ...(config.hasTshirtSize ? { "T-Shirt": r.tshirtSize || "" } : {}), Status: r.paymentStatus,
       "Preferred Golfers": r.preferredGolfers?.join(", "), "First Year Alumni": r.isFirstYearAlumni ? "Yes" : "No",
       "Pay for Preferred": r.payForPreferred?.join(", "), Amount: r.amount,
-    })), { Name: "TOTAL", Email: "", Phone: "", Status: "", "Preferred Golfers": "", "First Year Alumni": "", "Pay for Preferred": "", Amount: regTotal }];
+    })), { Name: "TOTAL", Email: "", Phone: "", ...(config.hasTshirtSize ? { "T-Shirt": "" } : {}), Status: "", "Preferred Golfers": "", "First Year Alumni": "", "Pay for Preferred": "", Amount: regTotal }];
     const sponData = [...sponsors.map((s) => ({
       Name: s.name, Tier: s.tier, Price: s.price, Logo: s.logo,
       Website: s.websiteLink, "Free Golfers": s.freeGolfers?.join(", "), Description: s.text,
     })), { Name: "TOTAL", Tier: "", Price: sponTotal, Logo: "", Website: "", "Free Golfers": "", Description: "" }];
 
     const wb = XLSX.utils.book_new();
+    const regColCount = config.hasTshirtSize ? 9 : 8;
     const ws1 = XLSX.utils.json_to_sheet(regData);
-    styleSheet(ws1, 8, regData.length, [7]); // Amount is col 7
+    styleSheet(ws1, regColCount, regData.length, [regColCount - 1]);
     const ws2 = XLSX.utils.json_to_sheet(sponData);
     styleSheet(ws2, 7, sponData.length, [2]); // Price is col 2
     XLSX.utils.book_append_sheet(wb, ws1, "Registrations");
@@ -251,6 +252,7 @@ export default function AdminDashboard() {
                         <TH<Registration> label="Name" sortKey="name" sort={regSort} />
                         <TH<Registration> label="Email" sortKey="email" sort={regSort} />
                         <TH<Registration> label="Phone" sortKey="phone" sort={regSort} />
+                        {config.hasTshirtSize && <TableHead>T-Shirt</TableHead>}
                         <TH<Registration> label="Status" sortKey="paymentStatus" sort={regSort} />
                         <TableHead>Preferred Golfers</TableHead>
                         <TableHead>First Year Alumni</TableHead>
@@ -260,12 +262,13 @@ export default function AdminDashboard() {
                     </TableHeader>
                     <TableBody>
                       {pagedRegs.length === 0 ? (
-                        <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">No registrations found</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={config.hasTshirtSize ? 9 : 8} className="text-center text-muted-foreground">No registrations found</TableCell></TableRow>
                       ) : pagedRegs.map((r) => (
                         <TableRow key={r._id}>
                           <TableCell className="font-medium">{r.name}</TableCell>
                           <TableCell>{r.email}</TableCell>
                           <TableCell>{r.phone}</TableCell>
+                          {config.hasTshirtSize && <TableCell>{r.tshirtSize || "—"}</TableCell>}
                           <TableCell><span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${r.paymentStatus === "completed" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}>{r.paymentStatus}</span></TableCell>
                           <TableCell>{r.preferredGolfers?.join(", ") || "—"}</TableCell>
                           <TableCell>{r.isFirstYearAlumni ? "Yes" : "No"}</TableCell>

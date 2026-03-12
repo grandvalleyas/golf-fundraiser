@@ -11,6 +11,7 @@ const updateSchema = z.object({
   name: z.string().min(1).regex(/\S/),
   email: z.string().email().regex(/\S/),
   phone: z.string().min(10),
+  tshirtSize: z.string().optional(),
   preferredGolfers: z.array(z.string()).max(3),
   isFirstYearAlumni: z.boolean(),
   payForPreferred: z.array(z.string()).optional(),
@@ -88,7 +89,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ spor
 
     const result = await db.collection(config.db.registrations).updateOne(
       { _id: new ObjectId(data._id), userId },
-      { $set: { name: data.name, email: data.email, phone: data.phone, preferredGolfers: data.preferredGolfers, isFirstYearAlumni: data.isFirstYearAlumni, payForPreferred: mergedPaid, updatedAt: new Date() } }
+      { $set: { name: data.name, email: data.email, phone: data.phone, tshirtSize: data.tshirtSize, preferredGolfers: data.preferredGolfers, isFirstYearAlumni: data.isFirstYearAlumni, payForPreferred: mergedPaid, updatedAt: new Date() } }
     );
     return NextResponse.json({ message: "Registration updated" });
   } catch (error) {
