@@ -80,7 +80,7 @@ const football: SportConfig = {
     { name: "Birdie Level", price: 10000, freeGolfers: 4, includesGolf: true, description: "Premium sponsorship — foursome included", category: "Premium Sponsorship" },
     { name: "Eagle Level", price: 15000, freeGolfers: 4, includesGolf: true, description: "Premium sponsorship — foursome included", category: "Premium Sponsorship" },
     { name: "Hole in One Level", price: 20000, freeGolfers: 4, includesGolf: true, description: "Premium sponsorship — foursome included, top-tier recognition", category: "Premium Sponsorship" },
-    { name: "Hole Sponsor", price: 200, freeGolfers: 0, includesGolf: false, description: "Includes tee box sign" },
+    { name: "Hole Sponsor", price: 300, freeGolfers: 0, includesGolf: false, description: "Includes tee box sign" },
     { name: "Cart Sponsor", price: 1000, freeGolfers: 1, includesGolf: true, description: "Includes one golfer, recognition on all carts, hole sponsor sign" },
     { name: "Beverage Sponsor", price: 1000, freeGolfers: 1, includesGolf: true, description: "Includes one golfer, recognition, hole sponsor sign" },
     { name: "Dinner Sponsor", price: 3000, freeGolfers: 4, includesGolf: true, description: "Includes foursome, recognition at dinner, hole sponsor sign" },
