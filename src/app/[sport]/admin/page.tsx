@@ -15,9 +15,11 @@ import { getSportConfig } from "@/lib/sports";
 import Image from "next/image";
 import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 
+type PreferredGolfer = { name: string; email?: string; tshirtSize?: string };
+
 type Registration = {
   _id: string; userId: string; paymentStatus: string; name: string; email: string;
-  phone: string; tshirtSize?: string; preferredGolfers: string[]; isFirstYearAlumni: boolean;
+  phone: string; tshirtSize?: string; preferredGolfers: (string | PreferredGolfer)[]; isFirstYearAlumni: boolean;
   payForPreferred: string[]; amount: number;
 };
 
@@ -67,6 +69,18 @@ function useSortableData<T>(items: T[]) {
 
 const PAGE_SIZES = [10, 25, 50];
 
+function formatGolfer(g: string | PreferredGolfer): string {
+  if (typeof g === "string") return g;
+  let s = g.name;
+  if (g.email) s += ` (${g.email})`;
+  if (g.tshirtSize) s += ` [${g.tshirtSize}]`;
+  return s;
+}
+
+function golferNames(golfers: (string | PreferredGolfer)[]): string[] {
+  return golfers.map((g) => typeof g === "string" ? g : g.name);
+}
+
 export default function AdminDashboard() {
   const { sport } = useParams<{ sport: string }>();
   const config = getSportConfig(sport);
@@ -103,7 +117,7 @@ export default function AdminDashboard() {
   const filteredRegs = useMemo(() => {
     if (!regSearch) return registrations;
     const q = regSearch.toLowerCase();
-    return registrations.filter((r) => [r.name, r.email, r.phone, r.paymentStatus, ...r.preferredGolfers].some((v) => v?.toLowerCase().includes(q)));
+    return registrations.filter((r) => [r.name, r.email, r.phone, r.paymentStatus, ...r.preferredGolfers.map((g) => typeof g === "string" ? g : `${g.name} ${g.email || ""}`)].some((v) => v?.toLowerCase().includes(q)));
   }, [registrations, regSearch]);
 
   const filteredSpons = useMemo(() => {
@@ -163,7 +177,7 @@ export default function AdminDashboard() {
   const exportToExcel = () => {
     const regData = [...registrations.map((r) => ({
       Name: r.name, Email: r.email, Phone: r.phone, ...(config.hasTshirtSize ? { "T-Shirt": r.tshirtSize || "" } : {}), Status: r.paymentStatus,
-      "Preferred Golfers": r.preferredGolfers?.join(", "), "First Year Alumni": r.isFirstYearAlumni ? "Yes" : "No",
+      "Preferred Golfers": r.preferredGolfers?.map(formatGolfer).join(", "), "First Year Alumni": r.isFirstYearAlumni ? "Yes" : "No",
       "Pay for Preferred": r.payForPreferred?.join(", "), Amount: r.amount,
     })), { Name: "TOTAL", Email: "", Phone: "", ...(config.hasTshirtSize ? { "T-Shirt": "" } : {}), Status: "", "Preferred Golfers": "", "First Year Alumni": "", "Pay for Preferred": "", Amount: regTotal }];
     const sponData = [...sponsors.map((s) => ({
@@ -270,7 +284,7 @@ export default function AdminDashboard() {
                           <TableCell>{r.phone}</TableCell>
                           {config.hasTshirtSize && <TableCell>{r.tshirtSize || "—"}</TableCell>}
                           <TableCell><span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${r.paymentStatus === "completed" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}>{r.paymentStatus}</span></TableCell>
-                          <TableCell>{r.preferredGolfers?.join(", ") || "—"}</TableCell>
+                          <TableCell>{r.preferredGolfers?.map(formatGolfer).join(", ") || "—"}</TableCell>
                           <TableCell>{r.isFirstYearAlumni ? "Yes" : "No"}</TableCell>
                           <TableCell>{r.payForPreferred?.join(", ") || "—"}</TableCell>
                           <TableCell className="font-medium">${r.amount?.toLocaleString() || 0}</TableCell>

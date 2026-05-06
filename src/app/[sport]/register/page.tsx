@@ -17,12 +17,18 @@ import { Trash2 } from "lucide-react";
 
 const TSHIRT_SIZES = ["S", "M", "L", "XL", "2XL", "3XL"] as const;
 
+const preferredGolferSchema = z.object({
+  name: z.string(),
+  email: z.string(),
+  tshirtSize: z.string().optional(),
+});
+
 const registerSchema = z.object({
   name: z.string().min(1, "Name is required").regex(/\S/, "Name cannot be empty"),
   email: z.string().email("Invalid email address").regex(/\S/, "Email cannot be empty"),
   phone: z.string().min(10, "Phone number is required"),
   tshirtSize: z.string().optional(),
-  preferredGolfers: z.array(z.string()).max(3, "Maximum 3 preferred golfers"),
+  preferredGolfers: z.array(preferredGolferSchema).max(3, "Maximum 3 preferred golfers"),
   isFirstYearAlumni: z.boolean(),
   payForPreferred: z.array(z.string()).optional(),
 });
@@ -55,14 +61,14 @@ function RegisterPageContent() {
 
   const { control, handleSubmit, watch, formState: { errors }, reset, setValue } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { name: "", email: "", phone: "", tshirtSize: "", preferredGolfers: ["", "", ""], isFirstYearAlumni: false, payForPreferred: [] },
+    defaultValues: { name: "", email: "", phone: "", tshirtSize: "", preferredGolfers: [{ name: "", email: "", tshirtSize: "" }, { name: "", email: "", tshirtSize: "" }, { name: "", email: "", tshirtSize: "" }], isFirstYearAlumni: false, payForPreferred: [] },
   });
 
   const currentName = watch("name");
   const currentEmail = watch("email");
-  const preferredGolfers = watch("preferredGolfers") || ["", "", ""];
+  const preferredGolfers = watch("preferredGolfers") || [{ name: "", email: "", tshirtSize: "" }, { name: "", email: "", tshirtSize: "" }, { name: "", email: "", tshirtSize: "" }];
   const { isFirstYearAlumni, payForPreferred } = watch();
-  const enteredGolfers = preferredGolfers.filter((g) => g && g.trim() !== "");
+  const enteredGolfers = preferredGolfers.filter((g) => g.name && g.name.trim() !== "");
   const numPreferredPaid = payForPreferred?.length || 0;
   const totalAmount = isFirstYearAlumni && config.hasFirstYearAlumniFree
     ? config.cost * numPreferredPaid
@@ -83,7 +89,12 @@ function RegisterPageContent() {
       const response = await fetch(`${apiBase}/checkout`);
       if (response.ok) {
         const data = await response.json();
-        if (data.length > 0) { setRegistration(data[0]); setMode("view"); }
+        if (data.length > 0) {
+          const reg = data[0];
+          reg.preferredGolfers = (reg.preferredGolfers || []).map((g: any) => typeof g === "string" ? { name: g, email: "", tshirtSize: "" } : g);
+          setRegistration(reg);
+          setMode("view");
+        }
         else { setRegistration(null); setMode("create"); }
       }
     } catch {
@@ -137,7 +148,7 @@ function RegisterPageContent() {
     const registrationData = {
       name, email, phone: data.phone,
       ...(config.hasTshirtSize && data.tshirtSize ? { tshirtSize: data.tshirtSize } : {}),
-      preferredGolfers: data.preferredGolfers.filter((g) => g && g.trim() !== ""),
+      preferredGolfers: data.preferredGolfers.filter((g) => g.name && g.name.trim() !== ""),
       isFirstYearAlumni: data.isFirstYearAlumni, payForPreferred: data.payForPreferred || [],
       userId: user.id, createdAt: new Date().toISOString(),
     };
@@ -175,8 +186,12 @@ function RegisterPageContent() {
   };
 
   const handleEdit = (reg: Registration) => {
-    reset({ ...reg, preferredGolfers: [...(reg.preferredGolfers || []), "", "", ""].slice(0, 3) });
-    setEditingRegistration(reg);
+    const emptyGolfer = { name: "", email: "", tshirtSize: "" };
+    const normalized = (reg.preferredGolfers || []).map((g) => typeof g === "string" ? { name: g, email: "", tshirtSize: "" } : g);
+    const padded = [...normalized, emptyGolfer, emptyGolfer, emptyGolfer].slice(0, 3);
+    const normalizedReg = { ...reg, preferredGolfers: normalized };
+    reset({ ...normalizedReg, preferredGolfers: padded });
+    setEditingRegistration(normalizedReg);
     setMode("edit");
   };
 
@@ -202,11 +217,15 @@ function RegisterPageContent() {
                 <p className="text-sm font-medium mb-2">Preferred Golfers</p>
                 <div className="space-y-1.5">
                   {registration.preferredGolfers.map((golfer, i) => {
-                    const isPaid = registration.payForPreferred?.includes(golfer);
+                    const isPaid = registration.payForPreferred?.includes(golfer.name);
                     return (
                       <div key={i} className="flex items-center justify-between bg-background rounded-lg px-3 py-2 text-sm">
-                        <span>{golfer} {isPaid && <span className="text-xs text-green-600 font-medium">(paid)</span>}</span>
-                        {!isPaid && <button onClick={() => handleDeletePreferredGolfer(registration._id, golfer, false)} disabled={loading} className="text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-4 w-4" /></button>}
+                        <div>
+                          <span>{golfer.name} {isPaid && <span className="text-xs text-green-600 font-medium">(paid)</span>}</span>
+                          {golfer.email && <span className="text-xs text-muted-foreground ml-2">{golfer.email}</span>}
+                          {golfer.tshirtSize && <span className="text-xs text-muted-foreground ml-2">({golfer.tshirtSize})</span>}
+                        </div>
+                        {!isPaid && <button onClick={() => handleDeletePreferredGolfer(registration._id, golfer.name, false)} disabled={loading} className="text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-4 w-4" /></button>}
                       </div>
                     );
                   })}
@@ -292,9 +311,21 @@ function RegisterPageContent() {
 
           <div>
             <Label>Preferred Golfers (up to 3)</Label>
-            <div className="space-y-2 mt-1">
+            <div className="space-y-4 mt-1">
               {[0, 1, 2].map((index) => (
-                <Controller key={index} name={`preferredGolfers.${index}`} control={control} render={({ field }) => <Input placeholder={`Golfer ${index + 1}`} {...field} disabled={mode === "edit" && !!editingRegistration?.payForPreferred?.includes(field.value)} />} />
+                <div key={index} className="space-y-2 rounded-lg border p-3">
+                  <p className="text-xs font-medium text-muted-foreground">Golfer {index + 1}</p>
+                  <Controller name={`preferredGolfers.${index}.name`} control={control} render={({ field }) => <Input placeholder="Name" {...field} disabled={mode === "edit" && !!editingRegistration?.payForPreferred?.includes(field.value)} />} />
+                  <Controller name={`preferredGolfers.${index}.email`} control={control} render={({ field }) => <Input placeholder="Email" type="email" {...field} />} />
+                  {config.hasTshirtSize && (
+                    <Controller name={`preferredGolfers.${index}.tshirtSize`} control={control} render={({ field }) => (
+                      <Select value={field.value || ""} onValueChange={field.onChange}>
+                        <SelectTrigger><SelectValue placeholder="T-Shirt Size" /></SelectTrigger>
+                        <SelectContent>{TSHIRT_SIZES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                      </Select>
+                    )} />
+                  )}
+                </div>
               ))}
             </div>
           </div>
@@ -311,14 +342,14 @@ function RegisterPageContent() {
               <Label>Pay for Preferred Golfers</Label>
               <div className="space-y-2 mt-1">
                 {enteredGolfers.map((golfer, index) => {
-                  const alreadyPaid = mode === "edit" && editingRegistration?.payForPreferred?.includes(golfer);
+                  const alreadyPaid = mode === "edit" && editingRegistration?.payForPreferred?.includes(golfer.name);
                   return (
                     <div key={index} className="flex items-center gap-2">
                       <Controller name="payForPreferred" control={control} render={({ field }) => (
-                        <Checkbox id={`payFor-${index}`} checked={field.value?.includes(golfer)} disabled={!!alreadyPaid}
-                          onCheckedChange={(checked) => { if (checked) field.onChange([...(field.value || []), golfer]); else field.onChange(field.value?.filter((n) => n !== golfer)); }} />
+                        <Checkbox id={`payFor-${index}`} checked={field.value?.includes(golfer.name)} disabled={!!alreadyPaid}
+                          onCheckedChange={(checked) => { if (checked) field.onChange([...(field.value || []), golfer.name]); else field.onChange(field.value?.filter((n) => n !== golfer.name)); }} />
                       )} />
-                      <Label htmlFor={`payFor-${index}`} className="text-sm">{alreadyPaid ? `${golfer} (paid)` : `Pay for ${golfer} ($${config.cost})`}</Label>
+                      <Label htmlFor={`payFor-${index}`} className="text-sm">{alreadyPaid ? `${golfer.name} (paid)` : `Pay for ${golfer.name} ($${config.cost})`}</Label>
                     </div>
                   );
                 })}

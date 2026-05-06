@@ -12,7 +12,7 @@ const updateSchema = z.object({
   email: z.string().email().regex(/\S/),
   phone: z.string().min(10),
   tshirtSize: z.string().optional(),
-  preferredGolfers: z.array(z.string()).max(3),
+  preferredGolfers: z.array(z.object({ name: z.string(), email: z.string().optional(), tshirtSize: z.string().optional() })).max(3),
   isFirstYearAlumni: z.boolean(),
   payForPreferred: z.array(z.string()).optional(),
   userId: z.string(),
@@ -114,7 +114,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sp
     if (!registration) return NextResponse.json({ error: "Registration not found" }, { status: 404 });
     if (registration.payForPreferred?.includes(golferToDelete)) return NextResponse.json({ error: "Cannot delete a preferred golfer you paid for" }, { status: 400 });
 
-    const updatedGolfers = registration.preferredGolfers.filter((g: string) => g !== golferToDelete);
+    const updatedGolfers = registration.preferredGolfers.filter((g: any) => (typeof g === "string" ? g : g.name) !== golferToDelete);
     await db.collection(config.db.registrations).updateOne({ _id: new ObjectId(registrationId), userId }, { $set: { preferredGolfers: updatedGolfers, updatedAt: new Date() } });
     return NextResponse.json({ message: "Preferred golfer removed" });
   } catch (error) {

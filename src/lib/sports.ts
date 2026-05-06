@@ -86,7 +86,7 @@ const football: SportConfig = {
     { name: "Dinner Sponsor", price: 3000, freeGolfers: 4, includesGolf: true, description: "Includes foursome, recognition at dinner, hole sponsor sign" },
     { name: "Title Sponsor", price: 10000, freeGolfers: 4, includesGolf: true, description: "Includes foursome, outing recognition, hole sponsor sign, sponsor gift" },
   ],
-  hasTshirtSize: false,
+  hasTshirtSize: true,
   hasFirstYearAlumniFree: true,
   db: { name: "golf_fundraiser_2026", registrations: "registrations", sponsors: "sponsors" },
   stripeProductPrefix: "Football Golf Outing",
