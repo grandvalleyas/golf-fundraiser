@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/mongodb";
-import { getSportConfig } from "@/lib/sports";
+import { getSportConfig, isEventConcluded } from "@/lib/sports";
 
 const registerSchema = z.object({
   name: z.string().min(1),
@@ -21,6 +21,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ spo
   const config = getSportConfig(sport);
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (isEventConcluded(config)) return NextResponse.json({ error: "This event has concluded. Registration is closed." }, { status: 400 });
 
   try {
     const { registrationData } = await request.json();

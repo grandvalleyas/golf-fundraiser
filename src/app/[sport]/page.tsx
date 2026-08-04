@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { getSportConfig } from "@/lib/sports";
+import { getSportConfig, isEventConcluded } from "@/lib/sports";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -13,7 +13,11 @@ import { CalendarDays, MapPin, Clock, DollarSign, Shirt, ChevronLeft, ChevronRig
 export default function SportPage() {
   const { sport } = useParams<{ sport: string }>();
   const config = getSportConfig(sport);
+  const concluded = isEventConcluded(config);
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const sortedGalleryYears = [...config.galleryImages].sort((a, b) => b.year - a.year);
+  const [selectedYear, setSelectedYear] = useState<number | null>(sortedGalleryYears[0]?.year ?? null);
+  const activeGallery = sortedGalleryYears.find((g) => g.year === selectedYear)?.images ?? [];
 
   return (
     <div className="min-h-screen">
@@ -24,22 +28,28 @@ export default function SportPage() {
         <div className="relative text-center px-6 max-w-2xl">
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 text-balance">{config.title}</h1>
           <p className="text-base sm:text-lg text-white/80 mb-8 max-w-lg mx-auto">{config.description}</p>
-          <SignedOut>
-            <div className="flex gap-3 justify-center">
-              <SignUpButton mode="redirect" forceRedirectUrl={`/${sport}/register`}>
-                <Button size="lg" className="bg-white text-primary hover:bg-white/90 font-semibold">Sign Up</Button>
-              </SignUpButton>
-              <SignInButton mode="redirect" forceRedirectUrl={`/${sport}/register`}>
-                <Button size="lg" variant="outline" className="border-white text-white bg-white/20 hover:bg-white/30 hover:!text-white">Sign In</Button>
-              </SignInButton>
-            </div>
-          </SignedOut>
-          <SignedIn>
-            <div className="flex gap-3 justify-center">
-              <Link href={`/${sport}/register`}><Button size="lg" className="bg-white text-primary hover:bg-white/90 font-semibold">Register Now</Button></Link>
-              <Link href={`/${sport}/sponsor`}><Button size="lg" variant="outline" className="border-white text-white bg-white/20 hover:bg-white/30 hover:!text-white">Sponsor</Button></Link>
-            </div>
-          </SignedIn>
+          {concluded ? (
+            <span className="inline-block px-4 py-2 rounded-full bg-white/15 border border-white/30 text-white font-semibold text-sm sm:text-base">Event Concluded</span>
+          ) : (
+            <>
+              <SignedOut>
+                <div className="flex gap-3 justify-center">
+                  <SignUpButton mode="redirect" forceRedirectUrl={`/${sport}/register`}>
+                    <Button size="lg" className="bg-white text-primary hover:bg-white/90 font-semibold">Sign Up</Button>
+                  </SignUpButton>
+                  <SignInButton mode="redirect" forceRedirectUrl={`/${sport}/register`}>
+                    <Button size="lg" variant="outline" className="border-white text-white bg-white/20 hover:bg-white/30 hover:!text-white">Sign In</Button>
+                  </SignInButton>
+                </div>
+              </SignedOut>
+              <SignedIn>
+                <div className="flex gap-3 justify-center">
+                  <Link href={`/${sport}/register`}><Button size="lg" className="bg-white text-primary hover:bg-white/90 font-semibold">Register Now</Button></Link>
+                  <Link href={`/${sport}/sponsor`}><Button size="lg" variant="outline" className="border-white text-white bg-white/20 hover:bg-white/30 hover:!text-white">Sponsor</Button></Link>
+                </div>
+              </SignedIn>
+            </>
+          )}
         </div>
       </section>
 
@@ -134,14 +144,20 @@ export default function SportPage() {
             </>
           )}
           <div className="text-center mt-8">
-            <SignedIn>
-              <Link href={`/${sport}/sponsor`}><Button size="lg">Become a Sponsor</Button></Link>
-            </SignedIn>
-            <SignedOut>
-              <SignUpButton mode="redirect" forceRedirectUrl={`/${sport}/sponsor`}>
-                <Button size="lg">Become a Sponsor</Button>
-              </SignUpButton>
-            </SignedOut>
+            {concluded ? (
+              <span className="inline-block px-4 py-2 rounded-full bg-muted text-muted-foreground font-medium text-sm">Event Concluded — Sponsorships Closed</span>
+            ) : (
+              <>
+                <SignedIn>
+                  <Link href={`/${sport}/sponsor`}><Button size="lg">Become a Sponsor</Button></Link>
+                </SignedIn>
+                <SignedOut>
+                  <SignUpButton mode="redirect" forceRedirectUrl={`/${sport}/sponsor`}>
+                    <Button size="lg">Become a Sponsor</Button>
+                  </SignUpButton>
+                </SignedOut>
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -150,9 +166,22 @@ export default function SportPage() {
       {config.galleryImages.length > 0 && (
         <section className="py-12 sm:py-16">
           <div className="container mx-auto px-6 max-w-5xl">
-            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-10">Event Highlights</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-6">Event Highlights</h2>
+            {sortedGalleryYears.length > 1 && (
+              <div className="flex justify-center gap-2 mb-10">
+                {sortedGalleryYears.map((g) => (
+                  <button
+                    key={g.year}
+                    onClick={() => { setSelectedYear(g.year); setLightbox(null); }}
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${selectedYear === g.year ? "bg-primary text-white" : "bg-card text-muted-foreground hover:text-foreground"}`}
+                  >
+                    {g.year}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
-              {config.galleryImages.map((image, i) => (
+              {activeGallery.map((image, i) => (
                 <div key={i} className="relative overflow-hidden rounded-xl group break-inside-avoid cursor-pointer" onClick={() => setLightbox(i)}>
                   <Image src={image.url} alt={image.title} width={600} height={400} className="w-full h-auto transition-transform duration-500 group-hover:scale-105" />
                 </div>
@@ -164,18 +193,18 @@ export default function SportPage() {
               <DialogTitle className="sr-only">Image Preview</DialogTitle>
               {lightbox !== null && (
                 <div className="relative">
-                  <Image src={config.galleryImages[lightbox].url} alt={config.galleryImages[lightbox].title} width={1200} height={800} className="w-full h-auto rounded-lg" />
+                  <Image src={activeGallery[lightbox].url} alt={activeGallery[lightbox].title} width={1200} height={800} className="w-full h-auto rounded-lg" />
                   {lightbox > 0 && (
                     <button onClick={(e) => { e.stopPropagation(); setLightbox(lightbox - 1); }} className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors">
                       <ChevronLeft className="h-6 w-6" />
                     </button>
                   )}
-                  {lightbox < config.galleryImages.length - 1 && (
+                  {lightbox < activeGallery.length - 1 && (
                     <button onClick={(e) => { e.stopPropagation(); setLightbox(lightbox + 1); }} className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors">
                       <ChevronRight className="h-6 w-6" />
                     </button>
                   )}
-                  <p className="text-center text-xs text-muted-foreground mt-2">{lightbox + 1} / {config.galleryImages.length}</p>
+                  <p className="text-center text-xs text-muted-foreground mt-2">{lightbox + 1} / {activeGallery.length}</p>
                 </div>
               )}
             </DialogContent>
@@ -186,19 +215,28 @@ export default function SportPage() {
       {/* Bottom CTA */}
       <section className="py-16 sm:py-20 bg-primary text-white text-center">
         <div className="container mx-auto px-6 max-w-xl">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-4">Ready to join?</h2>
-          <p className="text-white/80 mb-8">Register for the outing or become a sponsor today.</p>
-          <SignedIn>
-            <div className="flex gap-3 justify-center">
-              <Link href={`/${sport}/register`}><Button size="lg" className="bg-white text-primary hover:bg-white/90 font-semibold">Register</Button></Link>
-              <Link href={`/${sport}/sponsor`}><Button size="lg" variant="outline" className="border-white text-white bg-white/20 hover:bg-white/30 hover:!text-white">Sponsor</Button></Link>
-            </div>
-          </SignedIn>
-          <SignedOut>
-            <SignUpButton mode="redirect" forceRedirectUrl={`/${sport}/register`}>
-              <Button size="lg" className="bg-white text-primary hover:bg-white/90 font-semibold">Get Started</Button>
-            </SignUpButton>
-          </SignedOut>
+          {concluded ? (
+            <>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-4">Event Concluded</h2>
+              <p className="text-white/80">Thanks to everyone who registered and sponsored this year. Stay tuned for next year's event!</p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-4">Ready to join?</h2>
+              <p className="text-white/80 mb-8">Register for the outing or become a sponsor today.</p>
+              <SignedIn>
+                <div className="flex gap-3 justify-center">
+                  <Link href={`/${sport}/register`}><Button size="lg" className="bg-white text-primary hover:bg-white/90 font-semibold">Register</Button></Link>
+                  <Link href={`/${sport}/sponsor`}><Button size="lg" variant="outline" className="border-white text-white bg-white/20 hover:bg-white/30 hover:!text-white">Sponsor</Button></Link>
+                </div>
+              </SignedIn>
+              <SignedOut>
+                <SignUpButton mode="redirect" forceRedirectUrl={`/${sport}/register`}>
+                  <Button size="lg" className="bg-white text-primary hover:bg-white/90 font-semibold">Get Started</Button>
+                </SignUpButton>
+              </SignedOut>
+            </>
+          )}
         </div>
       </section>
     </div>

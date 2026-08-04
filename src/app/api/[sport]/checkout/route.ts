@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { stripe } from "@/lib/stripe";
 import { connectToDatabase } from "@/lib/mongodb";
-import { getSportConfig } from "@/lib/sports";
+import { getSportConfig, isEventConcluded } from "@/lib/sports";
 import { ObjectId } from "mongodb";
 
 const updateSchema = z.object({
@@ -48,6 +48,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ spo
   try {
     const { db } = await connectToDatabase(config.db.name);
     if (!isUpdate) {
+      if (isEventConcluded(config)) return NextResponse.json({ error: "This event has concluded. Registration is closed." }, { status: 400 });
       const existing = await db.collection(config.db.registrations).findOne({ userId });
       if (existing) return NextResponse.json({ error: "User already has a registration." }, { status: 400 });
     }

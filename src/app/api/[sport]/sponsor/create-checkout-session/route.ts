@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { connectToDatabase } from "@/lib/mongodb";
-import { getSportConfig } from "@/lib/sports";
+import { getSportConfig, isEventConcluded } from "@/lib/sports";
 
 export async function POST(request: Request, { params }: { params: Promise<{ sport: string }> }) {
   const { sport } = await params;
@@ -12,6 +12,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ spo
   try {
     const { db } = await connectToDatabase(config.db.name);
     if (!isUpgrade) {
+      if (isEventConcluded(config)) return NextResponse.json({ error: "This event has concluded. Sponsorships are closed." }, { status: 400 });
       if (await db.collection(config.db.sponsors).findOne({ userId })) {
         return NextResponse.json({ error: "You already have a sponsor. Edit your existing sponsorship." }, { status: 400 });
       }

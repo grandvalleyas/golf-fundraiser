@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getSportConfig } from "@/lib/sports";
+import { getSportConfig, isEventConcluded } from "@/lib/sports";
 import { Trash2 } from "lucide-react";
 
 const TSHIRT_SIZES = ["S", "M", "L", "XL", "2XL", "3XL"] as const;
@@ -46,6 +46,7 @@ interface Registration extends RegisterForm {
 function RegisterPageContent() {
   const { sport } = useParams<{ sport: string }>();
   const config = getSportConfig(sport);
+  const concluded = isEventConcluded(config);
   const { user, isLoaded } = useUser();
   const { toast } = useToast();
   const router = useRouter();
@@ -197,6 +198,15 @@ function RegisterPageContent() {
 
   if (!isLoaded || loadingRegistration) return <div className="flex items-center justify-center min-h-[60vh] text-muted-foreground">Loading...</div>;
 
+  if (mode === "create" && concluded) {
+    return (
+      <div className="container mx-auto px-6 py-12 max-w-lg text-center">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-4">Registration Closed</h1>
+        <p className="text-muted-foreground">This event has concluded and registration is closed.</p>
+      </div>
+    );
+  }
+
   if (mode === "view") {
     return (
       <div className="container mx-auto px-6 py-12 max-w-lg">
@@ -266,8 +276,14 @@ function RegisterPageContent() {
           </div>
         ) : (
           <div className="bg-card rounded-xl shadow-sm p-8 text-center">
-            <p className="text-muted-foreground mb-4">No reservation found.</p>
-            <Button onClick={() => setMode("create")}>Create Reservation</Button>
+            {concluded ? (
+              <p className="text-muted-foreground">This event has concluded and registration is closed.</p>
+            ) : (
+              <>
+                <p className="text-muted-foreground mb-4">No reservation found.</p>
+                <Button onClick={() => setMode("create")}>Create Reservation</Button>
+              </>
+            )}
           </div>
         )}
       </div>

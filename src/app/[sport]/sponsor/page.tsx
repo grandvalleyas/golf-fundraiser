@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import Image from "next/image";
 import { useToast } from "@/components/ui/use-toast";
-import { getSportConfig, type SponsorTier } from "@/lib/sports";
+import { getSportConfig, isEventConcluded, type SponsorTier } from "@/lib/sports";
 import { Check, Pencil, X } from "lucide-react";
 
 type Sponsor = {
@@ -20,6 +20,7 @@ type Sponsor = {
 function SponsorContent() {
   const { sport } = useParams<{ sport: string }>();
   const config = getSportConfig(sport);
+  const concluded = isEventConcluded(config);
   const tiers = config.sponsorTiers;
   const apiBase = `/api/${sport}`;
   const { user } = useUser();
@@ -269,6 +270,12 @@ function SponsorContent() {
                 </Button>
                 <Button variant="outline" size="lg" onClick={cancelEdit}>Cancel</Button>
               </div>
+            </div>
+          ) : !loading && concluded ? (
+            /* Concluded — no existing sponsor, new sponsorships closed */
+            <div className="bg-card rounded-xl shadow-sm p-8 text-center">
+              <h1 className="text-2xl sm:text-3xl font-bold mb-4">Sponsorships Closed</h1>
+              <p className="text-muted-foreground">This event has concluded and new sponsorships are no longer being accepted.</p>
             </div>
           ) : !loading && (
             /* Create Mode */

@@ -1,4 +1,4 @@
-import { allSports } from "@/lib/sports";
+import { allSports, isEventConcluded } from "@/lib/sports";
 import Link from "next/link";
 import Image from "next/image";
 import { CalendarDays, MapPin, ChevronDown } from "lucide-react";
@@ -35,6 +35,9 @@ export default function Home() {
                   <div className="absolute bottom-4 left-4 right-4">
                     <h3 className="text-xl font-bold text-white">{sport.name}</h3>
                   </div>
+                  {isEventConcluded(sport) && (
+                    <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/70 text-white text-xs font-medium">Event Concluded</span>
+                  )}
                 </div>
                 <div className="p-5 space-y-2">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
